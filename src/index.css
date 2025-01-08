@@ -1,0 +1,75 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-width: 100%;
+}
+
+code {
+  font-family: monospace;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  display: none;
+}
+::-webkit-scrollbar-track {
+  background-color: rgb(255, 255, 255);
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgb(39, 37, 86);
+
+  /* border-radius: 50px; */
+}
+
+@media (max-width: 840px) {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+}
+.toastBody {
+  color: #10171d; /* #10171D */
+  font-size: 1.3rem !important;
+}
+
+@keyframes write-text {
+  0% {
+    width: 0;
+    opacity: 0;
+  }
+  100% {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+.text-normal {
+  width: 100%;
+  opacity: 1;
+}

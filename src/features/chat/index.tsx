@@ -704,8 +704,8 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                           {mess.isLoading ? (
                             <PulseLoader
                               size={14}
-                              color="black"
-                              className="mt-3"
+                              color="#767676"
+                              className="mt-2"
                             />
                           ) : (
                             <span className="lg:text-[16px] text-sm font-normal text-[#6E6E6E]">
@@ -723,7 +723,11 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                         >
                           <Tooltip title="Read aloud">
                             <span
-                              className="flex items-center justify-center hover:bg-white/10 w-[30px] h-[30px] rounded-md"
+                              className={`flex items-center justify-center ${
+                                darkmode
+                                  ? "hover:bg-white/10"
+                                  : "hover:bg-gray-100"
+                              }  w-[30px] h-[30px] rounded-md`}
                               onClick={() => readTextAloud(mess?.content)}
                             >
                               <FaVolumeUp className="cursor-pointer " />
@@ -731,7 +735,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                           </Tooltip>
                           <Tooltip title="Copy">
                             <span
-                              className="flex items-center justify-center hover:bg-white/10 w-[30px] h-[30px] rounded-md"
+                              className={`flex items-center justify-center hover:bg-white/10 w-[30px] h-[30px] rounded-md`}
                               onClick={() => handleCopy(mess?.content)}
                             >
                               <FaCopy className="cursor-pointer " />
@@ -798,7 +802,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
 
               {loading ? (
                 <div
-                  onClick={() => stop()}
+                  // onClick={() => stop()}
                   className="border cursor-pointer border-gray-300 rounded-md flex items-center justify-center"
                 >
                   <PulseLoader size={14} />
@@ -941,7 +945,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
               />
               {isLoading ? (
                 <div
-                  onClick={() => stop()}
+                  // onClick={() => stop()}
                   className="border cursor-pointer border-gray-300 rounded-md flex items-center justify-center"
                 >
                   <StopIcon size={17} />

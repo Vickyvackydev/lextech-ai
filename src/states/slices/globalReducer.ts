@@ -86,8 +86,8 @@ export const GlobalSlice = createSlice({
       }
     },
     addLoadingState: (state) => {
-      (state.isLoading = true),
-        state.chats.push({ sender: "assistant", isLoading: true });
+      state.isLoading = true;
+      state.chats.push({ sender: "assistant", isLoading: true });
     },
     setIsLoading: (state, action) => {
       state.isLoading = action.payload;

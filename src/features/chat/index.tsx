@@ -669,24 +669,26 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                       })}
                   </div> */}
 
-                      <div
-                        className={`px-4  py-3 ${
-                          darkmode
-                            ? "border-0 bg-[#232627]"
-                            : "border border-[#E8ECEF] bg-none"
-                        }  rounded-full h-full w-fit text-wrap`}
-                      >
-                        <span
-                          className={`lg:text-[16px] text-sm font-semibold ${
-                            darkmode ? "text-white/80" : "text-[#6E6E6E] "
-                          } leading-relaxed`}
+                      <div className="flex items-end flex-col gap-y-1">
+                        <div
+                          className={`px-4  py-3 ${
+                            darkmode
+                              ? "border-0 bg-[#232627]"
+                              : "border border-[#E8ECEF] bg-none"
+                          }  rounded-full h-full w-fit text-wrap`}
                         >
-                          {mess?.content}
+                          <span
+                            className={`lg:text-[16px] text-sm font-semibold ${
+                              darkmode ? "text-white/80" : "text-[#6E6E6E] "
+                            } leading-relaxed`}
+                          >
+                            {mess?.content}
+                          </span>
+                        </div>
+                        <span className="lg:text-sm text-xs font-normal text-[#C9C9C9]">
+                          {formatChatTime(mess?.created_at)}
                         </span>
                       </div>
-                      <span className="lg:text-sm text-xs font-normal text-[#C9C9C9]">
-                        {formatChatTime(mess?.created_at)}
-                      </span>
                     </Fade>
                   ) : (
                     <div className="w-full gap-y-2 flex items-start gap-x-2">
@@ -726,7 +728,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                               className={`flex items-center justify-center ${
                                 darkmode
                                   ? "hover:bg-white/10"
-                                  : "hover:bg-gray-100"
+                                  : "text-gray-500 hover:bg-gray-200"
                               }  w-[30px] h-[30px] rounded-md`}
                               onClick={() => readTextAloud(mess?.content)}
                             >
@@ -735,7 +737,11 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                           </Tooltip>
                           <Tooltip title="Copy">
                             <span
-                              className={`flex items-center justify-center hover:bg-white/10 w-[30px] h-[30px] rounded-md`}
+                              className={`flex items-center justify-center ${
+                                darkmode
+                                  ? "hover:bg-white/10"
+                                  : "text-gray-500 hover:bg-gray-200"
+                              }  w-[30px] h-[30px] rounded-md`}
                               onClick={() => handleCopy(mess?.content)}
                             >
                               <FaCopy className="cursor-pointer " />

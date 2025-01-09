@@ -76,6 +76,8 @@ const SidebarV2 = (props: SidebarProps) => {
     );
   };
 
+  console.log(ChatHistory);
+
   // const {
   //   data: chatHistory,
   //   isLoading,
@@ -261,7 +263,7 @@ const SidebarV2 = (props: SidebarProps) => {
                       : "bg-[#E8ECEF] border-0 text-[#6C7275]"
                   }  flex items-center shadow-md justify-center text-xs font-medium `}
                 >
-                  {ChatHistory?.length}/{ChatHistory?.length}
+                  {ChatHistory?.data?.length}/{ChatHistory?.meta?.total}
                 </div>
               </div>
               {selectedIds.length > 0 && (
@@ -275,8 +277,8 @@ const SidebarV2 = (props: SidebarProps) => {
             </div>
             <Fade direction="up" duration={1000}>
               <div className="mt-16 flex flex-col gap-y-3 h-[400px] max-h-[400px] overflow-y-scroll">
-                {ChatHistory?.length > 0 ? (
-                  ChatHistory?.map(
+                {ChatHistory?.data?.length > 0 ? (
+                  ChatHistory?.data?.map(
                     (item: {
                       id: string;
                       title: string;

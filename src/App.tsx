@@ -5,6 +5,7 @@ import PrivateRoute from "./privateroute";
 import SignIn from "./pages/auth/sign-in";
 import Signup from "./pages/auth/sign-up";
 import { Chat } from "./features/chat";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route element={<SignIn />} path="/sign-in" />
         <Route element={<Signup />} path="/sign-up" />
       </Routes>
+      <Toaster position="top-right" />
     </>
   );
 }

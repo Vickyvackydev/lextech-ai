@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
+import toast from "react-hot-toast";
 export interface GlobalState {
   open: boolean;
   chatStarted: boolean;
@@ -55,25 +56,7 @@ export const GlobalSlice = createSlice({
     setChats: (state, action) => {
       state.chats.push(action.payload);
     },
-    // updateChat: (state, action) => {
-    //   const messageIndex = [...state.chats]
-    //     .reverse()
-    //     .findIndex((msg) => msg.sender === "assistant");
-    //   if (messageIndex !== -1) {
-    //     const actualIndex = state.chats.length - 1 - messageIndex;
-    //     state.chats[actualIndex] = {
-    //       ...state.chats[actualIndex],
-    //       content: action.payload.content,
-    //     };
-    //   }
-    // },
-    // updateChat: (state, action) => {
-    //   const { id, newData } = action.payload;
-    //   const message = state.chats.find((msg) => msg.id === id);
-    //   if (message) {
-    //     Object.assign(message, newData); // Update specific message
-    //   }
-    // },
+
     updateChat(state, action) {
       if (state.isLoading) {
         const index = state.chats.findIndex(
@@ -84,11 +67,14 @@ export const GlobalSlice = createSlice({
       } else {
         state.chats.push({ sender: "assistant", content: action.payload });
       }
+      state.isLoading = false;
     },
+
     addLoadingState: (state) => {
       state.isLoading = true;
       state.chats.push({ sender: "assistant", isLoading: true });
     },
+
     setIsLoading: (state, action) => {
       state.isLoading = action.payload;
     },

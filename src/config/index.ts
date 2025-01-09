@@ -7,7 +7,7 @@ import { reset } from "../states/slices/authReducer";
 export const API = axios.create({
   // baseURL: process.env.REACT_APP_DEV,
   // baseURL: "https://newbackendapi.azurewebsites.net/api/",
-  baseURL: "http://ai-api.anambrabpp.com/api/",
+  baseURL: "https://ai-api.anambrabpp.com/api/",
 });
 
 API.defaults.headers.common.Accept = "application/json";

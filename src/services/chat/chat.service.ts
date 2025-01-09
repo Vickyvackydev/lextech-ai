@@ -9,5 +9,5 @@ export const SendMessage = async (text: FormData) => {
 
 export const getChats = async () => {
   const response = await API.get("/chat");
-  return response?.data?.data;
+  return response?.data;
 };

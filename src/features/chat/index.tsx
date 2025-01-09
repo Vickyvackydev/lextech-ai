@@ -24,7 +24,7 @@ import {
 import { useQuery } from "react-query";
 import { getChats, SendMessage } from "../../services/chat/chat.service";
 import { formatChatTime, useClipboard } from "../../utils-func/functions";
-import { toast } from "react-toastify";
+
 import {
   ADD_ICON,
   AI_PHOTO,
@@ -55,6 +55,8 @@ import { Tooltip } from "@mui/material";
 import { PreviewAttachment } from "../../shared/components/custom/preview-attachment";
 import { StopIcon } from "../../shared/components/custom/icons";
 import Onboarding from "../../shared/components/custom/onboarding";
+import { late } from "zod";
+import toast from "react-hot-toast";
 
 export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   const [attachments, setAttachments] = useState<any>([]);
@@ -150,10 +152,81 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
     setListening(false);
     recognition.stop();
   };
+  // const handleStartChat = async () => {
+  //   dispatch(setChats({ sender: "user", content: message }));
+  //   setMessage("");
+  //   dispatch(addLoadingState());
+
+  //   const formData = new FormData();
+  //   formData.append("message", message);
+
+  //   try {
+  //     const response = await SendMessage(formData);
+  //     if (response) {
+  //       toast.success("Message sent wait for response");
+  //       window.history.replaceState({}, "", `/chat/${response?.data?.id}`);
+  //       dispatch(setChatId(response?.data?.id));
+  //       setMessage("");
+  //       const latestAssistantMessage = response.data.messages.find(
+  //         (msg: { sender: string }) => msg.sender === "assistant"
+  //       );
+  //       if (latestAssistantMessage) {
+  //         dispatch(updateChat(latestAssistantMessage.content));
+  //       }
+  //     }
+  //   } catch (error: any) {
+  //     toast.error(error?.response?.data?.message);
+  //   } finally {
+  //     dispatch(setIsLoading(false));
+  //     setListening(false);
+
+  //     setMessage("");
+  //     setCaptions("");
+  //   }
+  // };
+
+  // const handleContinueChat = async () => {
+  //   dispatch(setChats({ sender: "user", content: message }));
+  //   setMessage("");
+  //   dispatch(addLoadingState());
+
+  //   const formData = new FormData();
+  //   formData.append("message", message);
+  //   if (chatId) {
+  //     formData.append("chat_id", chatId);
+  //   }
+  //   try {
+  //     const response = await SendMessage(formData);
+  //     if (response) {
+  //       toast.success("Message sent wait for response");
+  //       setMessage("");
+  //     }
+  //     // dispatch(setChats(response?.data?.messages));
+
+  //     // // dispatch(updateChat(response.data.messages[1].content));
+  //     const latestAssistantMessage = response.data.messages.find(
+  //       (msg: { sender: string }) => msg.sender === "assistant"
+  //     );
+  //     // toast.success(latestAssistantMessage.content);
+  //     if (latestAssistantMessage) {
+  //       dispatch(updateChat(latestAssistantMessage.content));
+  //     }
+  //   } catch (error: any) {
+  //     toast.error(error?.response?.data?.message);
+  //   } finally {
+  //     dispatch(setIsLoading(false));
+  //     setListening(false);
+
+  //     setMessage("");
+  //     setCaptions("");
+  //   }
+  // };
+
   const handleStartChat = async () => {
     dispatch(setChats({ sender: "user", content: message }));
     setMessage("");
-    dispatch(addLoadingState());
+    setLoading(true);
+    // dispatch(addLoadingState());
 
     const formData = new FormData();
     formData.append("message", message);
@@ -161,59 +234,81 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
     try {
       const response = await SendMessage(formData);
       if (response) {
-        toast.success("Message sent wait for response");
+        toast.success("Message sent, wait for response");
         window.history.replaceState({}, "", `/chat/${response?.data?.id}`);
         dispatch(setChatId(response?.data?.id));
         setMessage("");
-        dispatch(updateChat(response.data.messages[1].content));
-        // const assistantMessage = response?.data?.message.find(
+        // const latestAssistantMessage = response.data.messages.find(
         //   (msg: { sender: string }) => msg.sender === "assistant"
         // );
 
-        // dispatch(
-        //   setChats({
-        //     sender: "assistant",
-        //     content: assistantMessage.content || "No response available",
-        //   })
-        // );
-        console.log(response?.data);
+        // if (latestAssistantMessage) {
+        //   // Dispatch to update the assistant's response
+        //   dispatch(updateChat(latestAssistantMessage.content));
+        // }
+        const assistantMessage = response?.data?.messages.find(
+          (msg: any) => msg.sender === "assistant"
+        );
+
+        if (assistantMessage) {
+          // Only dispatch the assistant's message to state
+          dispatch(
+            setChats({ sender: "assistant", content: assistantMessage.content })
+          );
+        }
       }
     } catch (error: any) {
       toast.error(error?.response?.data?.message);
     } finally {
-      setLoading(false);
+      // dispatch(setIsLoading(false)); // Make sure to stop loading after the response
       setListening(false);
-
+      setLoading(false);
       setMessage("");
       setCaptions("");
     }
   };
-  console.log(chats);
 
   const handleContinueChat = async () => {
     dispatch(setChats({ sender: "user", content: message }));
     setMessage("");
-    dispatch(addLoadingState());
+    setLoading(true);
+    // dispatch(addLoadingState());
+
     const formData = new FormData();
     formData.append("message", message);
     if (chatId) {
       formData.append("chat_id", chatId);
     }
+
     try {
       const response = await SendMessage(formData);
       if (response) {
-        toast.success("Message sent wait for response");
+        toast.success("Message sent, wait for response");
         setMessage("");
+        const assistantMessage = response?.data?.messages.find(
+          (msg: any) => msg.sender === "assistant"
+        );
+
+        if (assistantMessage) {
+          // Only dispatch the assistant's message to state
+          dispatch(updateChat(assistantMessage.content));
+        }
       }
-      // dispatch(setChats(response?.data?.messages));
-      dispatch(updateChat(response.data.messages[1].content));
+
+      // const latestAssistantMessage = response.data.messages.find(
+      //   (msg: { sender: string }) => msg.sender === "assistant"
+      // );
+      // console.log(latestAssistantMessage.content);
+      // if (latestAssistantMessage) {
+      //   // Dispatch to update the assistant's response
+      //   dispatch(updateChat(latestAssistantMessage.content));
+      // }
     } catch (error: any) {
       toast.error(error?.response?.data?.message);
     } finally {
-      setLoading(false);
-      dispatch(setIsLoading(false));
+      // dispatch(setIsLoading(false)); // Make sure to stop loading after the response
       setListening(false);
-
+      setLoading(false);
       setMessage("");
       setCaptions("");
     }
@@ -703,7 +798,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                         onMouseLeave={() => setHoveredMessage(null)}
                       >
                         <div className="px-4 rounded-xl h-full">
-                          {mess.isLoading ? (
+                          {/* {mess.isLoading ? (
                             <PulseLoader
                               size={14}
                               color="#767676"
@@ -713,7 +808,10 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                             <span className="lg:text-[16px] text-sm font-normal text-[#6E6E6E]">
                               {colorizeText(mess?.content)}
                             </span>
-                          )}
+                          )} */}
+                          <span className="lg:text-[16px] text-sm font-normal text-[#6E6E6E]">
+                            {colorizeText(mess?.content)}
+                          </span>
                         </div>
 
                         <div
@@ -754,16 +852,16 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                 </div>
               )
             )}
-          {/* {isThinking && (
+          {loading && (
             <div className="w-full flex items-start gap-x-3 relative gap-y-2 mt-5">
-              <Image src={AI_PHOTO} className="w-[30px] h-[30px] " alt="" />
+              <img src={AI_PHOTO} className="w-[30px] h-[30px] " alt="" />
               <div className="px-4  rounded-xl h-full">
                 <span className="text-[18px] font-semibold text-[#6E6E6E]">
-                  <PulseLoader size={isMobile ? 8 : 11} color="#5E5E5E" />
+                  <PulseLoader size={isMobile ? 8 : 11} color="#767676" />
                 </span>
               </div>
             </div>
-          )} */}
+          )}
           <div ref={messagesEndRef} />
         </div>
       )}

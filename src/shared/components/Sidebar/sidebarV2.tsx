@@ -334,7 +334,7 @@ const SidebarV2 = (props: SidebarProps) => {
                             <span className={`text-xs font-medium  `}>
                               {item.messages
                                 .filter((mes) => mes.sender === "assistant")[0]
-                                .content.slice(0, 40)}
+                                ?.content?.slice(0, 40)}
                               ...
                             </span>
                           </div>

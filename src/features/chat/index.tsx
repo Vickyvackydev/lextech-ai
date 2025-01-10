@@ -253,7 +253,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
     try {
       const response = await SendMessage(formData);
       if (response) {
-        toast.success("Message sent, wait for response");
+        // toast.success("Message sent, wait for response");
         window.history.replaceState({}, "", `/chat/${response?.data?.id}`);
         dispatch(setChatId(response?.data?.id));
 
@@ -289,7 +289,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
     try {
       const response = await SendMessage(formData);
       if (response) {
-        toast.success("Message sent, wait for response");
+        // toast.success("Message sent, wait for response");
 
         const latestAssistantMessage = response.data.messages
           .filter((msg: { sender: string }) => msg.sender === "assistant")

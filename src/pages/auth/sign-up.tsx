@@ -12,6 +12,8 @@ import { RegisTerTypes } from "../../services/auth/type";
 import { RegisterApi } from "../../services/auth/auth.service";
 import { LOGO_V2 } from "../../utils-func/image_exports";
 import ButtonV2 from "../../shared/components/buttonV2";
+import { clearChats } from "../../states/slices/globalReducer";
+import { useAppDispatch } from "../../hooks";
 
 type RegisterFormValues = z.infer<typeof RegisterSchema>;
 
@@ -20,7 +22,7 @@ function Signup() {
   const [showPassword1, setShowPassword1] = useState(false);
   const [showPassword2, setShowPassword2] = useState(false);
   const navigate = useNavigate();
-  const [isPending, startTransition] = useTransition();
+  const dispatch = useAppDispatch();
   const { register, handleSubmit, setValue, watch } = useForm<
     z.infer<typeof RegisterSchema>
   >({
@@ -90,10 +92,10 @@ function Signup() {
     try {
       const response = await RegisterApi(payload);
       if (response) {
-        toast.success(response?.data?.message, {
-          duration: 10000,
-        });
-
+        // toast.success(response?.data?.message, {
+        //   duration: 10000,
+        // });
+        dispatch(clearChats());
         navigate("/sign-in");
         setFormData({
           firstName: "",

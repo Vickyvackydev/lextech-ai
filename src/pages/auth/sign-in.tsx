@@ -13,7 +13,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginTypes } from "../../services/auth/type";
 import { LoginApi } from "../../services/auth/auth.service";
 import { setToken, setUser } from "../../states/slices/authReducer";
-import { setMessage } from "../../states/slices/globalReducer";
+import { clearChats, setMessage } from "../../states/slices/globalReducer";
 import ButtonV2 from "../../shared/components/buttonV2";
 
 // export default function SignIn() {
@@ -85,10 +85,11 @@ function SignIn() {
     try {
       const response = await LoginApi(payload);
       if (response) {
-        toast.success(response?.data?.message, {
-          duration: 10000,
-        });
-        console.log(response);
+        // toast.success(response?.data?.message, {
+        //   duration: 10000,
+        // });
+
+        dispatch(clearChats());
         dispatch(setUser(response?.data));
         dispatch(setToken(response?.data?.token));
         dispatch(setMessage([]));

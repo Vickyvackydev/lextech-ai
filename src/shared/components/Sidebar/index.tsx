@@ -79,6 +79,7 @@ import {
   formatTimeElapsed,
 } from "../../../utils-func/functions";
 import { SessionApi } from "../../../services/auth/auth.service";
+import { getChats } from "../../../services/chat/chat.service";
 
 interface SidebarProps {
   open: boolean;
@@ -121,6 +122,7 @@ const Sidebar = (props: SidebarProps) => {
 
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const { data: ChatHistory, isLoading } = useQuery("chats", getChats);
 
   // const {
   //   data: chatHistory,
@@ -147,14 +149,13 @@ const Sidebar = (props: SidebarProps) => {
   // const groupMessages = groupMessagesByDate(chatHistory);
   const [search, setSearch] = useState("");
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
-  const chatHistory: any = [];
-  const filteredMessages = chatHistory.filter(
-    (message: { title: string; summary: string; createdAt: string }) => {
-      const matchesSearch =
-        message.title.toLowerCase().includes(search.toLowerCase()) ||
-        message.summary.toLowerCase().includes(search.toLowerCase());
 
-      const messageDate = dayjs(message.createdAt);
+  const filteredMessages = ChatHistory?.data?.filter(
+    (message: { title: string; created_at: string }) => {
+      const matchesSearch = message?.title
+        .toLowerCase()
+        .includes(search.toLowerCase());
+      const messageDate = dayjs(message?.created_at);
       const matchesDate =
         !startDate || messageDate.isSame(startDate.startOf("day"), "day");
 
@@ -162,15 +163,14 @@ const Sidebar = (props: SidebarProps) => {
     }
   );
 
-  const groupMessages = filteredMessages.reduce(
-    (groups: any, message: { createdAt: string }) => {
-      const date = message.createdAt.split("T")[0];
+  const groupMessages =
+    filteredMessages !== undefined &&
+    filteredMessages?.reduce((groups: any, message: { created_at: string }) => {
+      const date = message?.created_at?.split("T")[0];
       if (!groups[date]) groups[date] = [];
       groups[date].push(message);
       return groups;
-    },
-    {} as Record<string, typeof chatHistory>
-  );
+    }, {} as Record<string, typeof ChatHistory>);
 
   const isMobileView = useMediaQuery("(max-width: 640px)");
   const isTabletView = useMediaQuery("(max-width: 840px)");
@@ -877,7 +877,8 @@ const Sidebar = (props: SidebarProps) => {
                     (item: {
                       title: string;
                       summary: string;
-                      createdAt: string;
+                      created_at: string;
+                      messages: any[];
                     }) => (
                       <div className="w-full flex lg:items-center items-end lg:justify-between justify-end lg:flex-row flex-col gap-y-3">
                         <div className="flex flex-col items-start">
@@ -889,13 +890,14 @@ const Sidebar = (props: SidebarProps) => {
                             {item?.title}
                           </span>
                           <span className="text-[#8E8E93] font-medium text-xs">
-                            {item?.summary?.length > 45
-                              ? `${item?.summary.slice(0, 45)}...`
-                              : item?.summary}
+                            {item.messages
+                              .filter((mes) => mes.sender === "assistant")[0]
+                              .content.slice(0, 45)}
+                            ...
                           </span>
                         </div>
                         <span className="text-[#8E8E93] font-medium text-xs">
-                          {formatTimeElapsed(item?.createdAt)}
+                          {formatTimeElapsed(item?.created_at)}
                         </span>
                       </div>
                     )

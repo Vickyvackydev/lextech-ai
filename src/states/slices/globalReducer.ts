@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
+import { v4 as uuidv4 } from "uuid";
 import toast from "react-hot-toast";
 export interface GlobalState {
   open: boolean;
@@ -53,33 +54,43 @@ export const GlobalSlice = createSlice({
     setDarkMode: (state, action) => {
       state.darkMode = action.payload;
     },
+    // Redux Reducers
     setChats: (state, action) => {
       state.chats.push(action.payload);
     },
 
-    updateChat(state, action) {
-      if (state.isLoading) {
-        const index = state.chats.findIndex(
-          (msg) => msg.sender === "assistant" && msg.isLoading
-        );
-        if (index !== -1)
-          state.chats[index] = { sender: "assistant", content: action.payload };
+    updateChat: (state, action) => {
+      const index = state.chats.findIndex((msg) => msg.isLoading);
+      if (index !== -1) {
+        state.chats[index] = {
+          id: uuidv4(),
+          sender: "assistant",
+          content: action.payload,
+        };
       } else {
-        state.chats.push({ sender: "assistant", content: action.payload });
+        state.chats.push({
+          id: uuidv4(),
+          sender: "assistant",
+          content: action.payload,
+        });
       }
       state.isLoading = false;
     },
 
     addLoadingState: (state) => {
-      state.isLoading = true;
-      state.chats.push({ sender: "assistant", isLoading: true });
+      if (!state.isLoading) {
+        state.isLoading = true;
+        state.chats.push({ sender: "assistant", isLoading: true });
+      }
     },
 
     setIsLoading: (state, action) => {
       state.isLoading = action.payload;
     },
+
     clearChats: (state) => {
       state.chats = [];
+      state.messages = [];
     },
     setChatId: (state, action) => {
       state.chatId = action.payload;
@@ -117,7 +128,7 @@ export const {
 export const SelectOpenState = (state: RootState) => state.globalstate.open;
 export const startChat = (state: RootState) => state.globalstate.chatStarted;
 export const openModal = (state: RootState) => state.globalstate.searchModal;
-export const getMessages = (state: RootState) => state.globalstate.messages;
+export const selectMessages = (state: RootState) => state.globalstate.messages;
 export const selectInput = (state: RootState) => state.globalstate.input;
 export const selectDarkmode = (state: RootState) => state.globalstate.darkMode;
 export const selectChat = (state: RootState) => state.globalstate.chats;

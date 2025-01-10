@@ -11,7 +11,12 @@ import {
 } from "@headlessui/react";
 import { useEffect, useState, useRef } from "react";
 import { BiLogOut } from "react-icons/bi";
-import { FaCheck, FaSignOutAlt } from "react-icons/fa";
+import {
+  FaCheck,
+  FaEllipsisH,
+  FaEllipsisV,
+  FaSignOutAlt,
+} from "react-icons/fa";
 
 import Tooltip from "@mui/material/Tooltip";
 
@@ -50,6 +55,15 @@ interface SidebarProps {
   setOpen: any;
 }
 
+interface MessageType {
+  messages: [
+    {
+      chat_id: string;
+      content: string;
+    }
+  ];
+}
+
 const SidebarV2 = (props: SidebarProps) => {
   const { open, onClose, setOpen } = props;
   const dispatch = useAppDispatch();
@@ -62,9 +76,13 @@ const SidebarV2 = (props: SidebarProps) => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [selectedIds, setSelectedIds] = useState<any>([]);
   const { data: ChatHistory, isLoading } = useQuery("chats", getChats);
-  const handleChatClick = (id: string, e: React.MouseEvent) => {
+  const handleChatClick = (
+    id: string,
+    messages: any[],
+    e: React.MouseEvent
+  ) => {
     e.preventDefault();
-    // dispatch(setChats(chats));
+    dispatch(setChats(messages));
     navigate(`/chat/${id}`);
   };
   const handleSelectId = (id: string) => {
@@ -120,8 +138,6 @@ const SidebarV2 = (props: SidebarProps) => {
   const darkmode = useAppSelector(selectDarkmode);
   const navigate = useNavigate();
 
-  // console.log(chatHistory);
-
   return (
     <>
       {isMobileView || isTabletView ? (
@@ -155,33 +171,10 @@ const SidebarV2 = (props: SidebarProps) => {
               <div
                 className="w-[50px] h-[50px] rounded-full cursor-pointer items-center justify-center flex bg-white/20"
                 onClick={() => {
-                  // dispatch(setLiveCaptionPopUp(true));
                   dispatch(setLiveCaption(true));
                 }}
               >
-                {/* <Image src={RING} className="w-[24px] h-[24px]" alt="" /> */}
-
-                {/* <BiLogOut
-                  size={24}
-                  color="#6C7275"
-                  className="cursor-pointer hover:scale-105 transition-all duration-300"
-                  onClick={() => setShowLogOutBox((prev) => !prev)}
-                /> */}
-
                 <img src={CAPTIONS} className="w-[34px] h-[34px]" alt="" />
-                {/* {showLogOutBox && (
-                  <div
-                    ref={btnRef}
-                    className={`rounded-lg w-[87px] h-[40px] right-2 ${
-                      darkmode
-                        ? "bg-none border border-[#343839] text-green-500 hover:bg-green-500 hover:text-white"
-                        : "bg-white border-0 text-gray-400 hover:text-white "
-                    } hover:bg-green-500  cursor-pointer shadow-md absolute p-2 text-center font-medium   `}
-                    onClick={() => router.replace("/sign-in")}
-                  >
-                    Log out
-                  </div>
-                )} */}
               </div>
             </Tooltip>
 
@@ -284,9 +277,10 @@ const SidebarV2 = (props: SidebarProps) => {
                       title: string;
                       summary: string;
                       created_at: string;
+                      messages: any[];
                     }) => (
-                      <div className="flex items-start justify-start gap-x-2 cursor-pointer">
-                        <div
+                      <div className="flex items-start justify-start cursor-pointer">
+                        {/* <div
                           className={`max-w-[20px] max-h-[20px] p-1 rounded-md border-2 ${
                             darkmode ? "border-white/50" : "border-[#6C727580]"
                           }  mt-2 flex items-center justify-center cursor-pointer`}
@@ -298,10 +292,19 @@ const SidebarV2 = (props: SidebarProps) => {
                               color={`${darkmode ? "#ffffff" : "#6C727580"}`}
                             />
                           )}
-                        </div>
+                        </div> */}
+                        {/* <div className=" left-4 mt-4">
+                          <FaEllipsisV className="text-gray-500 hover:text-white" />
+                        </div> */}
                         <div
-                          className="flex flex-col items-end gap-y-2 cursor-pointer"
-                          onClick={(e) => handleChatClick(item?.id, e)}
+                          className={`flex relative flex-col items-end gap-y-0 cursor-pointer px-2 rounded-lg py-1 ${
+                            darkmode
+                              ? "hover:bg-white/20"
+                              : "hover:bg-[#F3F5F7]"
+                          }`}
+                          onClick={(e) =>
+                            handleChatClick(item?.id, item?.messages, e)
+                          }
                         >
                           <div className="flex flex-col">
                             <span
@@ -309,20 +312,15 @@ const SidebarV2 = (props: SidebarProps) => {
                                 darkmode ? "text-white" : "text-[#141718]"
                               } text-[16px] font-semibold`}
                             >
-                              {/* Brainwave AI UI Kit */}
                               {item?.title.length > 15
                                 ? `${item?.title.slice(0, 15)}...`
                                 : item?.title}
                             </span>
-                            <span
-                              className={`text-xs font-medium ${
-                                darkmode ? "text-white/80" : "text-[#6C7275]"
-                              } `}
-                            >
-                              {/* Analyze precedents and case outcomes */}
-                              {item?.summary?.length > 45
-                                ? `${item?.summary?.slice(0, 45)}...`
-                                : item?.summary}
+                            <span className={`text-xs font-medium  `}>
+                              {item.messages
+                                .filter((mes) => mes.sender === "assistant")[0]
+                                .content.slice(0, 40)}
+                              ...
                             </span>
                           </div>
                           <span

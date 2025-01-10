@@ -166,12 +166,7 @@ function Onboarding({
                 ? "border-[#343839] hover:bg-white/10"
                 : "border-[#E8ECEF]"
             } cursor-pointer px-4 pt-8 border gap-y-3 flex flex-col rounded-xl h-[195px] w-full`}
-            onClick={async () => {
-              append({
-                role: "user",
-                content: "Analyze precedents and case outcomes",
-              });
-            }}
+            onClick={() => append("Analyze precedents and case outcomes")}
           >
             <img src={CASE} className="w-[53px] h-[53px]" alt="" />
             <div className="flex flex-col">
@@ -193,12 +188,13 @@ function Onboarding({
                 ? "border-[#343839] hover:bg-white/10"
                 : "border-[#E8ECEF]"
             } cursor-pointer px-4 pt-8 border gap-y-3 flex flex-col rounded-xl h-[195px] w-full`}
-            onClick={async () => {
-              append({
-                role: "user",
-                content: "Review and summarize legal documents",
-              });
-            }}
+            // onClick={async () => {
+            //   append({
+            //     role: "user",
+            //     content: "Review and summarize legal documents",
+            //   });
+            // }}
+            onClick={() => append("Review and summarize legal documents")}
           >
             <img src={DOC_ICON} className="w-[53px] h-[53px]" alt="" />
             <div className="flex flex-col">
@@ -220,12 +216,13 @@ function Onboarding({
                 ? "border-[#343839] hover:bg-white/10"
                 : "border-[#E8ECEF]"
             } cursor-pointer px-4 pt-8 border gap-y-3 flex flex-col rounded-xl h-[195px] w-full`}
-            onClick={async () => {
-              append({
-                role: "user",
-                content: "Research specific legal topics",
-              });
-            }}
+            // onClick={async () => {
+            //   append({
+            //     role: "user",
+            //     content: "Research specific legal topics",
+            //   });
+            // }}
+            onClick={() => append("Research specific legal topics")}
           >
             <img src={LEGAL} className="w-[53px] h-[53px]" alt="" />
             <div className="flex flex-col">
@@ -247,12 +244,13 @@ function Onboarding({
                 ? "border-[#343839] hover:bg-white/10"
                 : "border-[#E8ECEF]"
             } cursor-pointer px-4 pt-8 border gap-y-3 flex flex-col rounded-xl h-[195px] w-full`}
-            onClick={async () => {
-              append({
-                role: "user",
-                content: "Create legal document summaries",
-              });
-            }}
+            // onClick={async () => {
+            //   append({
+            //     role: "user",
+            //     content: "Create legal document summaries",
+            //   });
+            // }}
+            onClick={() => append("Create legal document summaries")}
           >
             <img src={DRAFT} className="w-[53px] h-[53px]" alt="" />
             <div className="flex flex-col">

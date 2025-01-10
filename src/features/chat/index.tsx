@@ -1,4 +1,10 @@
-import { useState, useEffect, useRef, useCallback, ChangeEvent } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  ChangeEvent,
+} from "react";
 
 import { motion } from "framer-motion";
 
@@ -47,8 +53,11 @@ import {
   FaEllipsisH,
   FaFilePdf,
   FaImage,
+  FaTrash,
   FaVolumeUp,
 } from "react-icons/fa";
+import { FaBoxArchive, FaShare, FaStar } from "react-icons/fa6";
+
 import { Fade } from "react-awesome-reveal";
 import { PulseLoader } from "react-spinners";
 import { Tooltip } from "@mui/material";
@@ -80,6 +89,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const chats = useAppSelector(selectChat);
   // const [chats, setChats] = useState<any[]>([]);
+  const timeStamp = new Date().toISOString();
   const isFirstNewChat = chats?.length < 1;
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -90,6 +100,14 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   const liveCaption = useAppSelector(showCaption);
   const liveCaptionPopUp = useAppSelector(showCaptionPopUp);
   const { copyToClipboard } = useClipboard();
+  const formatDate = (iso: number | string) => {
+    const date = new Date(iso);
+    return date.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
 
   // console.log(chatMessages);
 
@@ -222,14 +240,15 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   //   }
   // };
 
-  const handleStartChat = async () => {
-    dispatch(setChats({ sender: "user", content: message }));
+  const handleStartChat = async (mess: string) => {
+    dispatch(
+      setChats({ sender: "user", content: mess, created_at: timeStamp })
+    );
     setMessage("");
-    setLoading(true);
-    // dispatch(addLoadingState());
+    dispatch(addLoadingState());
 
     const formData = new FormData();
-    formData.append("message", message);
+    formData.append("message", mess);
 
     try {
       const response = await SendMessage(formData);
@@ -237,45 +256,32 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
         toast.success("Message sent, wait for response");
         window.history.replaceState({}, "", `/chat/${response?.data?.id}`);
         dispatch(setChatId(response?.data?.id));
-        setMessage("");
-        // const latestAssistantMessage = response.data.messages.find(
-        //   (msg: { sender: string }) => msg.sender === "assistant"
-        // );
 
-        // if (latestAssistantMessage) {
-        //   // Dispatch to update the assistant's response
-        //   dispatch(updateChat(latestAssistantMessage.content));
-        // }
-        const assistantMessage = response?.data?.messages.find(
-          (msg: any) => msg.sender === "assistant"
-        );
+        const latestAssistantMessage = response.data.messages
+          .filter((msg: { sender: string }) => msg.sender === "assistant")
+          .slice(-1)[0];
 
-        if (assistantMessage) {
-          // Only dispatch the assistant's message to state
-          dispatch(
-            setChats({ sender: "assistant", content: assistantMessage.content })
-          );
+        if (latestAssistantMessage) {
+          dispatch(updateChat(latestAssistantMessage.content));
         }
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message);
+      toast.error(error?.response?.data?.message || "Error occurred");
     } finally {
-      // dispatch(setIsLoading(false)); // Make sure to stop loading after the response
-      setListening(false);
-      setLoading(false);
+      dispatch(setIsLoading(false));
       setMessage("");
-      setCaptions("");
     }
   };
 
-  const handleContinueChat = async () => {
-    dispatch(setChats({ sender: "user", content: message }));
+  const handleContinueChat = async (mess: string) => {
+    dispatch(
+      setChats({ sender: "user", content: mess, created_at: timeStamp })
+    );
     setMessage("");
-    setLoading(true);
-    // dispatch(addLoadingState());
+    dispatch(addLoadingState());
 
     const formData = new FormData();
-    formData.append("message", message);
+    formData.append("message", mess);
     if (chatId) {
       formData.append("chat_id", chatId);
     }
@@ -284,44 +290,29 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
       const response = await SendMessage(formData);
       if (response) {
         toast.success("Message sent, wait for response");
-        setMessage("");
-        const assistantMessage = response?.data?.messages.find(
-          (msg: any) => msg.sender === "assistant"
-        );
 
-        if (assistantMessage) {
-          // Only dispatch the assistant's message to state
-          dispatch(updateChat(assistantMessage.content));
+        const latestAssistantMessage = response.data.messages
+          .filter((msg: { sender: string }) => msg.sender === "assistant")
+          .slice(-1)[0];
+
+        if (latestAssistantMessage) {
+          dispatch(updateChat(latestAssistantMessage.content));
         }
       }
-
-      // const latestAssistantMessage = response.data.messages.find(
-      //   (msg: { sender: string }) => msg.sender === "assistant"
-      // );
-      // console.log(latestAssistantMessage.content);
-      // if (latestAssistantMessage) {
-      //   // Dispatch to update the assistant's response
-      //   dispatch(updateChat(latestAssistantMessage.content));
-      // }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message);
+      toast.error(error?.response?.data?.message || "Error occurred");
     } finally {
-      // dispatch(setIsLoading(false)); // Make sure to stop loading after the response
-      setListening(false);
-      setLoading(false);
+      dispatch(setIsLoading(false)); // Ensure loading state reset
       setMessage("");
-      setCaptions("");
     }
   };
 
-  const handleSendMessage = async (e?: ChangeEvent) => {
-    setLoading(true);
+  const handleSendMessage = async (message_: string, e?: React.ChangeEvent) => {
     e?.preventDefault();
-
     if (chatId) {
-      await handleContinueChat();
+      await handleContinueChat(message_); // Continue chat if chat ID exists
     } else {
-      await handleStartChat();
+      await handleStartChat(message_); // Start new chat otherwise
     }
   };
 
@@ -410,10 +401,13 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
 
   const isLoading = false;
 
-  const handleEnterMessage = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleEnterMessage = (
+    e: React.KeyboardEvent<HTMLTextAreaElement>,
+    mess_: string
+  ) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      handleSendMessage(mess_);
     }
   };
   const handleCopy = async (str: string) => {
@@ -439,8 +433,6 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
 
     return () => window.removeEventListener("keydown", handleControlKeyDown);
   }, []);
-
-  console.log(uploadQueue);
 
   //   const handleShareChat = async (chatId: string) => {
   //     const shareUrl = await shareChat(chatId, "whatsapp");
@@ -590,7 +582,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   return (
     <div className="w-full pt-8 lg:px-16 px-7">
       {isFirstNewChat ? (
-        <Onboarding username={user?.username} append={() => {}} />
+        <Onboarding username={user?.username} append={handleStartChat} />
       ) : (
         <div
           ref={chatContainerRef}
@@ -608,7 +600,11 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
             </span>
             <div className="flex items-center gap-x-4">
               <Tooltip title="Mark favorite">
-                <div className="flex items-center justify-center hover:bg-white/10 w-[30px] h-[30px] rounded-md">
+                <div
+                  className={`flex items-center justify-center ${
+                    darkmode ? "hover:bg-white/10 " : "hover:bg-[#F3F5F7]"
+                  } w-[30px] h-[30px] rounded-md`}
+                >
                   <img
                     src={darkmode ? STAR_ICON_GRAY : STAR_ICON}
                     className="w-[26px] h-[26px] cursor-pointer"
@@ -617,7 +613,11 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                 </div>
               </Tooltip>
               <Tooltip title="Share">
-                <div className="flex items-center justify-center hover:bg-white/10 w-[30px] h-[30px] rounded-md">
+                <div
+                  className={`flex items-center justify-center ${
+                    darkmode ? "hover:bg-white/10 " : "hover:bg-[#F3F5F7]"
+                  } w-[30px] h-[30px] rounded-md`}
+                >
                   <img
                     src={EXPO_SHARE}
                     className="w-[26px] h-[26px] cursor-pointer"
@@ -629,7 +629,11 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
 
               <Menu>
                 <Tooltip title="Options">
-                  <MenuButton className="inline-flex items-center justify-center hover:bg-white/10 gap-2 rounded-md  py-1.5 px-3 text-sm/6 font-semibold text-white focus:outline-none   data-[focus]:outline-1 data-[focus]:outline-white">
+                  <MenuButton
+                    className={`inline-flex items-center justify-center ${
+                      darkmode ? "hover:bg-white/10" : "hover:bg-[#F3F5F7]"
+                    }  gap-2 rounded-md  py-1.5 px-3 text-sm/6 font-semibold text-white focus:outline-none   data-[focus]:outline-1 data-[focus]:outline-white`}
+                  >
                     {darkmode ? (
                       <FaEllipsisH
                         size={25}
@@ -661,11 +665,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                           : "data-[focus]:bg-[#F3F5F7] text-[#6C7275]"
                       } `}
                     >
-                      <img
-                        src={darkmode ? STAR_ICON_WHITE : STAR_ICON_}
-                        className="w-[26px] h-[26px] cursor-pointer"
-                        alt=""
-                      />
+                      <FaStar className="w-[18px] h-[18px] cursor-pointer" />
                       Mark favorite
                     </button>
                   </MenuItem>
@@ -677,12 +677,13 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                           : "data-[focus]:bg-[#F3F5F7] text-[#6C7275]"
                       } `}
                     >
-                      <img
+                      {/* <img
                         src={darkmode ? DUPLICATE_ICON_WHITE : DUPLICATE_ICON}
                         className="w-[22px] h-[22px] cursor-pointer"
                         alt=""
-                      />
-                      Duplicate
+                      /> */}
+                      <FaBoxArchive className="w-[18px] h-[18px] cursor-pointer" />
+                      Archive
                     </button>
                   </MenuItem>
                   <div className="my-1 h-px bg-white/5" />
@@ -694,11 +695,12 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                           : "data-[focus]:bg-[#F3F5F7] text-[#6C7275]"
                       } `}
                     >
-                      <img
+                      {/* <img
                         src={darkmode ? EXPO_SHARE_WHITE : EXPO_SHARE}
                         className="w-[22px] h-[22px] cursor-pointer"
                         alt=""
-                      />
+                      /> */}
+                      <FaShare className="w-[18px] h-[18px] cursor-pointer" />
                       Share
                     </button>
                   </MenuItem>
@@ -710,11 +712,12 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                           : "data-[focus]:bg-[#F3F5F7] text-red-500"
                       } `}
                     >
-                      <img
+                      {/* <img
                         src={darkmode ? DELETE_ICON_RED : DELETE_ICON}
                         className="w-[26px] h-[26px] cursor-pointer"
                         alt=""
-                      />
+                      /> */}
+                      <FaTrash className="w-[18px] h-[18px] cursor-pointer text-red-500" />
                       Delete
                     </button>
                   </MenuItem>
@@ -781,7 +784,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                           </span>
                         </div>
                         <span className="lg:text-sm text-xs font-normal text-[#C9C9C9]">
-                          {formatChatTime(mess?.created_at)}
+                          {formatDate(mess?.created_at)}
                         </span>
                       </div>
                     </Fade>
@@ -798,7 +801,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                         onMouseLeave={() => setHoveredMessage(null)}
                       >
                         <div className="px-4 rounded-xl h-full">
-                          {/* {mess.isLoading ? (
+                          {mess.isLoading ? (
                             <PulseLoader
                               size={14}
                               color="#767676"
@@ -808,10 +811,10 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                             <span className="lg:text-[16px] text-sm font-normal text-[#6E6E6E]">
                               {colorizeText(mess?.content)}
                             </span>
-                          )} */}
-                          <span className="lg:text-[16px] text-sm font-normal text-[#6E6E6E]">
+                          )}
+                          {/* <span className="lg:text-[16px] text-sm font-normal text-[#6E6E6E]">
                             {colorizeText(mess?.content)}
-                          </span>
+                          </span> */}
                         </div>
 
                         <div
@@ -852,7 +855,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                 </div>
               )
             )}
-          {loading && (
+          {/* {loading && (
             <div className="w-full flex items-start gap-x-3 relative gap-y-2 mt-5">
               <img src={AI_PHOTO} className="w-[30px] h-[30px] " alt="" />
               <div className="px-4  rounded-xl h-full">
@@ -861,7 +864,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                 </span>
               </div>
             </div>
-          )}
+          )} */}
           <div ref={messagesEndRef} />
         </div>
       )}
@@ -969,7 +972,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
               name=""
               placeholder={placeHolder}
               rows={1}
-              onKeyDown={handleEnterMessage}
+              onKeyDown={(e) => handleEnterMessage(e, message)}
               value={message}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                 setMessage(e.target.value)
@@ -1087,7 +1090,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                       type="button"
                       onClick={(e) => {
                         e.preventDefault();
-                        handleSendMessage();
+                        handleSendMessage(message);
                       }}
                     >
                       <img

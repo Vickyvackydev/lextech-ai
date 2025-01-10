@@ -33,7 +33,9 @@ import { useAppDispatch, useAppSelector, useMediaQuery } from "../../../hooks";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getChats } from "../../../services/chat/chat.service";
 import {
+  passPreviouseChats,
   selectDarkmode,
+  setChatId,
   setChats,
   setLiveCaption,
   setMessage,
@@ -48,6 +50,7 @@ import {
   TRASH,
 } from "../../../utils-func/image_exports";
 import { formatTimeElapsed } from "../../../utils-func/functions";
+import { date } from "zod";
 
 interface SidebarProps {
   open: boolean;
@@ -82,8 +85,20 @@ const SidebarV2 = (props: SidebarProps) => {
     e: React.MouseEvent
   ) => {
     e.preventDefault();
-    dispatch(setChats(messages));
+
+    const selectedChatMessages = messages.map((mess) => ({
+      id: mess.id,
+      sender: mess.sender,
+      content: mess.content,
+      created_at: new Date(mess.created_at).toLocaleTimeString("en-us", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
+    }));
+    dispatch(passPreviouseChats(selectedChatMessages));
     navigate(`/chat/${id}`);
+    dispatch(setChatId(id));
   };
   const handleSelectId = (id: string) => {
     setSelectedIds(

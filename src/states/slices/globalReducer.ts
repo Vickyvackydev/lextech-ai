@@ -87,6 +87,10 @@ export const GlobalSlice = createSlice({
     setIsLoading: (state, action) => {
       state.isLoading = action.payload;
     },
+    passPreviouseChats: (state, action) => {
+      state.chats = action.payload;
+      state.isLoading = false;
+    },
 
     clearChats: (state) => {
       state.chats = [];
@@ -123,6 +127,7 @@ export const {
   updateChat,
   addLoadingState,
   clearChats,
+  passPreviouseChats,
 } = GlobalSlice.actions;
 
 export const SelectOpenState = (state: RootState) => state.globalstate.open;

@@ -6,7 +6,7 @@ import { Transition } from "@headlessui/react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import moment from "moment";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -22,7 +22,14 @@ import { format, parseISO, startOfDay, endOfDay } from "date-fns";
 import dayjs, { Dayjs } from "dayjs";
 import { useQuery } from "react-query";
 import { useAppDispatch, useAppSelector } from "../../../hooks";
-import { selectUser } from "../../../states/slices/authReducer";
+import {
+  selectProfile,
+  selectUser,
+  selectUserName,
+  setProfileUpdate,
+  setUser,
+  setUserName,
+} from "../../../states/slices/authReducer";
 import {
   clearChats,
   openModal,
@@ -78,8 +85,18 @@ import {
   formatHeaderDate,
   formatTimeElapsed,
 } from "../../../utils-func/functions";
-import { SessionApi } from "../../../services/auth/auth.service";
-import { getChats } from "../../../services/chat/chat.service";
+import {
+  editProfileApi,
+  SessionApi,
+  UpdatePasswordApi,
+} from "../../../services/auth/auth.service";
+import {
+  getArchivedChats,
+  getChats,
+  getFavoritesChats,
+} from "../../../services/chat/chat.service";
+import toast from "react-hot-toast";
+import { FaWindows } from "react-icons/fa";
 
 interface SidebarProps {
   open: boolean;
@@ -97,7 +114,8 @@ const Sidebar = (props: SidebarProps) => {
   const open = useAppSelector(SelectOpenState);
   const modalIsOpen = useAppSelector(openModal);
   const [lists, setLists] = useState(false);
-  const [session, setSession] = useState<any>(null);
+  const { data: favorites } = useQuery("favorites", getFavoritesChats);
+  const { data: archived } = useQuery("favorites", getArchivedChats);
 
   const switchTabs = () => {
     switch (tab) {
@@ -119,8 +137,8 @@ const Sidebar = (props: SidebarProps) => {
         break;
     }
   };
-
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const username = useAppSelector(selectUserName);
+  const userImg = useAppSelector(selectProfile);
   const [hasMore, setHasMore] = useState(false);
   const { data: ChatHistory, isLoading } = useQuery("chats", getChats);
 
@@ -341,7 +359,7 @@ const Sidebar = (props: SidebarProps) => {
 
               <Fade direction="down" duration={900}>
                 <ul className={`pt-6  flex flex-col gap-y-6 overflow-auto`}>
-                  <li className="flex pl-2 items-center justify-between gap-x-5">
+                  {/* <li className="flex pl-2 items-center justify-between gap-x-5">
                     <div
                       className={`flex  items-center ${
                         open && "justify-center"
@@ -363,7 +381,7 @@ const Sidebar = (props: SidebarProps) => {
                     <div className="w-[35px] h-[24px] rounded-md flex items-center justify-center bg-[#232627]">
                       <span className="text-[#6C7275]">48</span>
                     </div>
-                  </li>
+                  </li> */}
                   <li className="flex pl-2 items-center justify-between gap-x-5">
                     <div
                       className={`flex  items-center $ justify-start gap-x-5`}
@@ -382,7 +400,9 @@ const Sidebar = (props: SidebarProps) => {
                     </div>
 
                     <div className="w-[35px] h-[24px] rounded-md flex items-center justify-center bg-[#232627]">
-                      <span className="text-[#6C7275]">18</span>
+                      <span className="text-[#6C7275]">
+                        {favorites?.length}
+                      </span>
                     </div>
                   </li>
                   <li className="flex pl-2 items-center justify-between gap-x-5">
@@ -401,7 +421,7 @@ const Sidebar = (props: SidebarProps) => {
                     </div>
 
                     <div className="w-[35px] h-[24px] rounded-md flex items-center justify-center bg-[#232627]">
-                      <span className="text-[#6C7275]">128</span>
+                      <span className="text-[#6C7275]">{archived?.length}</span>
                     </div>
                   </li>
                   <li className={`flex items-center justify-start gap-x-5`}>
@@ -418,7 +438,7 @@ const Sidebar = (props: SidebarProps) => {
                 <div className="flex items-center justify-between  w-full">
                   <div className="relative">
                     <img
-                      src={MAN}
+                      src={userImg?.image ?? MAN}
                       className="w-[40px] h-[40px] rounded-full"
                       alt="image"
                     />
@@ -431,7 +451,7 @@ const Sidebar = (props: SidebarProps) => {
 
                   <div className="flex flex-col items-start">
                     <span className="text-sm font-semibold text-[#FEFEFE]">
-                      {user?.username}
+                      {username}
                     </span>
                     <span className="text-[#E8ECEF80] font-semibold text-xs">
                       {user?.email?.length! > 15
@@ -688,7 +708,9 @@ const Sidebar = (props: SidebarProps) => {
                       </div>
                       {open && (
                         <div className="w-[35px] h-[24px] rounded-md flex items-center justify-center bg-[#232627]">
-                          <span className="text-[#6C7275]">18</span>
+                          <span className="text-[#6C7275]">
+                            {favorites?.length}
+                          </span>
                         </div>
                       )}
                     </li>
@@ -720,7 +742,9 @@ const Sidebar = (props: SidebarProps) => {
                       </div>
                       {open && (
                         <div className="w-[35px] h-[24px] rounded-md flex items-center justify-center bg-[#232627]">
-                          <span className="text-[#6C7275]">128</span>
+                          <span className="text-[#6C7275]">
+                            {archived?.length}
+                          </span>
                         </div>
                       )}
                     </li>
@@ -747,7 +771,7 @@ const Sidebar = (props: SidebarProps) => {
                 <div className=" w-[63px] -ml-1 mt-8 h-full bg-[#FFFFFF01] rounded-xl ">
                   <div className="relative ">
                     <img
-                      src={MAN}
+                      src={userImg?.image ?? MAN}
                       className="w-[40px] h-[40px] rounded-full"
                       alt="image"
                     />
@@ -765,7 +789,7 @@ const Sidebar = (props: SidebarProps) => {
                   <div className="flex items-center justify-between  w-full">
                     <div className="relative">
                       <img
-                        src={MAN}
+                        src={userImg?.image ?? MAN}
                         className="w-[40px] h-[40px] rounded-full"
                         alt="image"
                       />
@@ -778,7 +802,7 @@ const Sidebar = (props: SidebarProps) => {
 
                     <div className="flex flex-col items-start">
                       <span className="text-sm font-semibold text-[#FEFEFE]">
-                        {user?.username}
+                        {username}
                       </span>
                       <span className="text-[#E8ECEF80] font-semibold text-xs">
                         {user?.email?.length! > 15
@@ -982,7 +1006,7 @@ const Sidebar = (props: SidebarProps) => {
                 </span>
               </div>
             </div>
-            <div className="w-full flex flex-col gap-y-3 cursor-pointer">
+            {/* <div className="w-full flex flex-col gap-y-3 cursor-pointer">
               <div
                 className={`flex items-center justify-start pl-4 gap-x-3 ${
                   tab === "notification" && "border-2 border-[#007AFF]"
@@ -1002,7 +1026,7 @@ const Sidebar = (props: SidebarProps) => {
                   Notification
                 </span>
               </div>
-            </div>
+            </div> */}
             <div className="w-full flex flex-col gap-y-3 cursor-pointer">
               <div
                 onClick={() => setTab("session")}
@@ -1087,7 +1111,79 @@ const Sidebar = (props: SidebarProps) => {
 export default Sidebar;
 
 export const EditProfile = () => {
+  const [updating, setUpdating] = useState(false);
+  const imageRef = useRef<HTMLDivElement>(null);
+  const [previewImg, setPreviewImg] = useState<any>(null);
   const darkmode = useAppSelector(selectDarkmode);
+  const dispatch = useAppDispatch();
+
+  const user = useAppSelector(selectProfile);
+  const activeuser = useAppSelector(selectUser);
+  const [image, setImage] = useState<File | null>(null);
+  const [formdata, setFormdata] = useState({
+    first_name: user?.first_name ?? "",
+    last_name: user?.last_name ?? "",
+    location: user?.location ?? "",
+    bio: user?.bio ?? "",
+  });
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedImage = e.target.files && e.target.files[0];
+    if (selectedImage) {
+      setImage(selectedImage);
+      setPreviewImg(URL.createObjectURL(selectedImage));
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormdata((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleUpdateProfile = async () => {
+    setUpdating(true);
+
+    const formData = new FormData();
+    if (image) formData.append("image", image);
+    formData.append("first_name", formdata.first_name);
+    formData.append("last_name", formdata.last_name);
+    formData.append("location", formdata.location);
+    formData.append("bio", formdata.bio);
+
+    try {
+      const response = await editProfileApi(formData, activeuser?.id);
+      if (response) {
+        toast.success(response?.message);
+        dispatch(setProfileUpdate(response?.data));
+        dispatch(setUserName(response?.data?.username));
+        setFormdata({
+          first_name: "",
+          last_name: "",
+          location: "",
+          bio: "",
+        });
+        setImage(null);
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  useEffect(() => {
+    setFormdata({
+      first_name: user?.first_name || "",
+      last_name: user?.last_name || "",
+      location: user?.location || "",
+      bio: user?.bio || "",
+    });
+  }, []);
   return (
     <div className="w-full flex flex-col items-start justify-start">
       <div className="flex flex-col gap-y-3 items-start justify-start">
@@ -1109,11 +1205,19 @@ export const EditProfile = () => {
               Avatar
             </span>
             <div>
-              <img
-                src={MAN}
-                className="w-[109.71px] h-[109.71px] object-contain rounded-full"
-                alt=""
-              />
+              {user?.image ? (
+                <img
+                  src={user?.image}
+                  className="w-[109.71px] h-[109.71px] object-contain rounded-full"
+                  alt=""
+                />
+              ) : (
+                <img
+                  src={previewImg ?? MAN}
+                  className="w-[109.71px] h-[109.71px] object-contain rounded-full"
+                  alt=""
+                />
+              )}
             </div>
           </div>
           <div className="flex items-start flex-col gap-y-3">
@@ -1122,7 +1226,7 @@ export const EditProfile = () => {
               btnStyle={`border ${
                 darkmode ? "border-gray-700" : "border-[#EAEAEA]"
               }   rounded-lg w-[203px] h-[52px] flex items-center justify-center`}
-              handleClick={() => {}}
+              handleClick={() => imageRef.current?.click()}
               textStyle={`font-semibold ${
                 darkmode ? "text-[#FEFEFE]" : "text-[#4C4C4C]"
               } `}
@@ -1132,6 +1236,14 @@ export const EditProfile = () => {
               allowed
             </span>
           </div>
+          <input
+            // @ts-ignore
+            ref={imageRef!}
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="sr-only"
+          />
         </div>
       </div>
       <div className="flex flex-col items-start gap-y-8 w-full mt-4">
@@ -1141,7 +1253,7 @@ export const EditProfile = () => {
               darkmode ? "text-[#FEFEFE]" : "text-[#4C4C4C]"
             }`}
           >
-            Name
+            First name
           </span>
           <div
             className={` ${
@@ -1151,7 +1263,36 @@ export const EditProfile = () => {
             <img src={PROFILE_GRAY_ICON} className="w-[24px] h-[24px]" alt="" />
             <input
               type="text"
-              placeholder="Username"
+              name="first_name"
+              placeholder="first name"
+              value={formdata.first_name}
+              onChange={handleInputChange}
+              className={`w-full ${
+                darkmode ? "text-[#A3A3A3]" : "text-black"
+              } bg-transparent outline-none placeholder:text-[#A3A3A3] placeholder:text-[16px]`}
+            />
+          </div>
+        </div>
+        <div className="w-full flex items-start flex-col gap-y-1">
+          <span
+            className={`text-[16px] font-semibold ${
+              darkmode ? "text-[#FEFEFE]" : "text-[#4C4C4C]"
+            }`}
+          >
+            Last name
+          </span>
+          <div
+            className={` ${
+              darkmode ? "bg-[#4C4C4C]" : " bg-[#F3F5F7]"
+            } w-full flex items-start gap-x-3 px-3 py-4 rounded-lg`}
+          >
+            <img src={PROFILE_GRAY_ICON} className="w-[24px] h-[24px]" alt="" />
+            <input
+              type="text"
+              name="last_name"
+              placeholder="last name"
+              value={formdata.last_name}
+              onChange={handleInputChange}
               className={`w-full ${
                 darkmode ? "text-[#A3A3A3]" : "text-black"
               } bg-transparent outline-none placeholder:text-[#A3A3A3] placeholder:text-[16px]`}
@@ -1174,7 +1315,10 @@ export const EditProfile = () => {
             <img src={LOCATION_ICON} className="w-[24px] h-[24px]" alt="" />
             <input
               type="text"
+              name="location"
               placeholder="Location"
+              value={formdata.location}
+              onChange={handleInputChange}
               className={`w-full ${
                 darkmode ? "text-[#A3A3A3]" : "text-black"
               } bg-transparent outline-none placeholder:text-[#A3A3A3] placeholder:text-[16px]`}
@@ -1197,7 +1341,10 @@ export const EditProfile = () => {
             <img src={BIO_ICON} className="w-[24px] h-[24px]" alt="" />
             <textarea
               rows={5}
+              name="bio"
               placeholder="Short bio"
+              value={formdata.bio}
+              onChange={handleInputChange}
               className={`w-full resize-none bg-transparent outline-none  ${
                 darkmode ? "text-[#A3A3A3]" : "text-black"
               } placeholder:text-[#A3A3A3] placeholder:text-[16px]`}
@@ -1205,9 +1352,12 @@ export const EditProfile = () => {
           </div>
         </div>
         <ButtonV2
-          title="Save changes"
+          type="button"
+          loading={updating}
+          disabled={updating}
+          title={`${updating ? "Please wait..." : "Save changes"}`}
           btnStyle=" rounded-lg w-full h-[62px] flex items-center justify-center bg-[#1787FC]"
-          handleClick={() => {}}
+          handleClick={handleUpdateProfile}
           textStyle="text-white font-semibold"
         />
       </div>
@@ -1216,7 +1366,56 @@ export const EditProfile = () => {
 };
 
 export const UpdatePassword = () => {
+  const [updating, setUpdating] = useState(false);
   const darkmode = useAppSelector(selectDarkmode);
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectUser);
+  const [passUpdateForm, setPassUpdateForm] = useState({
+    current_password: "",
+    new_password: "",
+    new_password_confirmation: "",
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPassUpdateForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handlePasswordUpdate = async () => {
+    setUpdating(true);
+
+    const payload = {
+      current_password: passUpdateForm.current_password,
+      new_password: passUpdateForm.new_password,
+      new_password_confirmation: passUpdateForm.new_password_confirmation,
+    };
+
+    try {
+      const response = await UpdatePasswordApi(payload, user?.id);
+      if (response) {
+        toast.success(response?.message);
+
+        setPassUpdateForm({
+          current_password: "",
+          new_password: "",
+          new_password_confirmation: "",
+        });
+        window.history.replaceState({}, "", "/sign-in");
+        setTimeout(() => {
+          window.location.reload();
+          dispatch(setSettings(false));
+        }, 1000);
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   return (
     <div className="w-full flex flex-col items-start justify-start">
       <span
@@ -1244,6 +1443,9 @@ export const UpdatePassword = () => {
             <img src={PAD_LOCK} className="w-[24px] h-[24px]" alt="" />
             <input
               type="password"
+              name="current_password"
+              value={passUpdateForm.current_password}
+              onChange={handleInputChange}
               placeholder="Password"
               className={`w-full ${
                 darkmode ? "text-[#A3A3A3]" : "text-black"
@@ -1267,6 +1469,9 @@ export const UpdatePassword = () => {
             <img src={PAD_LOCK} className="w-[24px] h-[24px]" alt="" />
             <input
               type="password"
+              name="new_password"
+              value={passUpdateForm.new_password}
+              onChange={handleInputChange}
               placeholder="New password"
               className={`w-full ${
                 darkmode ? "text-[#A3A3A3]" : "text-black"
@@ -1293,6 +1498,9 @@ export const UpdatePassword = () => {
             <img src={PAD_LOCK} className="w-[24px] h-[24px]" alt="" />
             <input
               type="password"
+              name="new_password_confirmation"
+              value={passUpdateForm.new_password_confirmation}
+              onChange={handleInputChange}
               placeholder="Confirm Password"
               className={`w-full ${
                 darkmode ? "text-[#A3A3A3]" : "text-black"
@@ -1304,9 +1512,11 @@ export const UpdatePassword = () => {
           </span>
         </div>
         <ButtonV2
+          loading={updating}
+          disabled={updating}
           title="Change password"
           btnStyle=" rounded-lg w-full h-[62px] flex items-center justify-center bg-[#1787FC]"
-          handleClick={() => {}}
+          handleClick={handlePasswordUpdate}
           textStyle="text-white font-semibold"
         />
       </div>

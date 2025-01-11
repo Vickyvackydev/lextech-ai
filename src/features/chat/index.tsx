@@ -10,9 +10,10 @@ import { motion } from "framer-motion";
 
 import { MenuButton, Menu, MenuItem, MenuItems } from "@headlessui/react";
 import { useAppDispatch, useAppSelector, useMediaQuery } from "../../hooks";
-import { selectUser } from "../../states/slices/authReducer";
+import { selectUser, selectUserName } from "../../states/slices/authReducer";
 import {
   addLoadingState,
+  clearChats,
   selectChat,
   selectChatId,
   selectDarkmode,
@@ -28,8 +29,18 @@ import {
   updateChat,
 } from "../../states/slices/globalReducer";
 import { useQuery } from "react-query";
-import { getChats, SendMessage } from "../../services/chat/chat.service";
-import { formatChatTime, useClipboard } from "../../utils-func/functions";
+import {
+  archiveChat,
+  deleteChat,
+  getChats,
+  markChatAsFavorite,
+  SendMessage,
+} from "../../services/chat/chat.service";
+import {
+  formatChatTime,
+  formatDate,
+  useClipboard,
+} from "../../utils-func/functions";
 
 import {
   ADD_ICON,
@@ -59,17 +70,19 @@ import {
 import { FaBoxArchive, FaShare, FaStar } from "react-icons/fa6";
 
 import { Fade } from "react-awesome-reveal";
-import { PulseLoader } from "react-spinners";
+import { FadeLoader, PulseLoader } from "react-spinners";
 import { Tooltip } from "@mui/material";
 import { PreviewAttachment } from "../../shared/components/custom/preview-attachment";
 import { StopIcon } from "../../shared/components/custom/icons";
 import Onboarding from "../../shared/components/custom/onboarding";
 import { late } from "zod";
 import toast from "react-hot-toast";
+import ModalV2 from "../../shared/components/modalV2";
+import { Navigate, useNavigate } from "react-router-dom";
 
 export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   const [attachments, setAttachments] = useState<any>([]);
-
+  const username = useAppSelector(selectUserName);
   const user = useAppSelector(selectUser);
   const [listening, setListening] = useState(false);
   const [userStartedSpeaking, setUserStartedSpeaking] = useState(false);
@@ -83,31 +96,32 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
   const [captions, setCaptions] = useState("");
   const [fileSelector, setFileSelector] = useState(false);
-
+  const [archivedAction, setArchivedAction] = useState(false);
+  const [archivedState, setArchivedState] = useState(false);
+  const [markAsFavoriteState, setMarkAsFavoriteState] = useState(false);
   const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const chats = useAppSelector(selectChat);
+  const [deleted, setDeleted] = useState(false);
   // const [chats, setChats] = useState<any[]>([]);
+  const [markAsFavorite, setMarkAsFavorite] = useState(false);
   const timeStamp = new Date().toISOString();
   const isFirstNewChat = chats?.length < 1;
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatId = useAppSelector(selectChatId);
   const [loading, setLoading] = useState(false);
-  const { data: chatMessages } = useQuery("chats", getChats);
+  const { data: chatMessages, refetch: chatHistoryRefetch } = useQuery(
+    "chats",
+    getChats
+  );
   const darkmode = useAppSelector(selectDarkmode);
   const liveCaption = useAppSelector(showCaption);
   const liveCaptionPopUp = useAppSelector(showCaptionPopUp);
   const { copyToClipboard } = useClipboard();
-  const formatDate = (iso: number | string) => {
-    const date = new Date(iso);
-    return date.toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  const [deleteModal, setDeleteModal] = useState(false);
+  const navigate = useNavigate();
 
   // console.log(chatMessages);
 
@@ -242,7 +256,11 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
 
   const handleStartChat = async (mess: string) => {
     dispatch(
-      setChats({ sender: "user", content: mess, created_at: timeStamp })
+      setChats({
+        sender: "user",
+        content: mess,
+        created_at: formatDate(timeStamp),
+      })
     );
     setMessage("");
     dispatch(addLoadingState());
@@ -254,6 +272,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
       const response = await SendMessage(formData);
       if (response) {
         // toast.success("Message sent, wait for response");
+        chatHistoryRefetch(); // update the chat history with the new chat added
         window.history.replaceState({}, "", `/chat/${response?.data?.id}`);
         dispatch(setChatId(response?.data?.id));
 
@@ -447,6 +466,56 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   //     );
   //   };
 
+  const handleMarkChatAsFavorite = async (id: string) => {
+    setLoading(true);
+    try {
+      const response = await markChatAsFavorite(id);
+      if (response) {
+        // setArchivedAction(true);
+        // setArchivedState(true);
+        setMarkAsFavorite(true);
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleRemoveChatAsFavorite = (id: string) => {};
+  const handleArchiveChat = async (id: string) => {
+    setLoading(true);
+    try {
+      const response = await archiveChat(id);
+      if (response) {
+        setArchivedAction(true);
+        setArchivedState(true);
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleUnarchiveChat = (id: string) => {};
+  const handleDeleteChat = async (id: string) => {
+    setDeleteModal(false);
+    setLoading(true);
+
+    try {
+      const response = await deleteChat(id);
+      if (response) {
+        setDeleted(true);
+        dispatch(clearChats());
+        navigate("/");
+        chatHistoryRefetch(); // refetch the chat history after a chat has being deleted
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const semanticColors = (isDarkMode: boolean) => ({
     title: isDarkMode
       ? "text-blue-400 font-semibold text-xl"
@@ -582,7 +651,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   return (
     <div className="w-full pt-8 lg:px-16 px-7">
       {isFirstNewChat ? (
-        <Onboarding username={user?.username} append={handleStartChat} />
+        <Onboarding username={username} append={handleStartChat} />
       ) : (
         <div
           ref={chatContainerRef}
@@ -601,6 +670,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
             <div className="flex items-center gap-x-4">
               <Tooltip title="Mark favorite">
                 <div
+                  onClick={() => markChatAsFavorite(chatId)}
                   className={`flex items-center justify-center ${
                     darkmode ? "hover:bg-white/10 " : "hover:bg-[#F3F5F7]"
                   } w-[30px] h-[30px] rounded-md`}
@@ -659,6 +729,8 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                 >
                   <MenuItem>
                     <button
+                      type="button"
+                      onClick={() => handleMarkChatAsFavorite(chatId)}
                       className={`group flex w-full text-[#6C7275] font-normal text-[15px] items-center gap-2 rounded-lg py-1.5 px-3  ${
                         darkmode
                           ? "data-[focus]:bg-white/10 text-white"
@@ -671,6 +743,8 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                   </MenuItem>
                   <MenuItem>
                     <button
+                      type="button"
+                      onClick={() => handleArchiveChat(chatId)}
                       className={`group flex w-full text-[#6C7275] font-normal text-[15px] items-center gap-2 rounded-lg py-1.5 px-3  ${
                         darkmode
                           ? "data-[focus]:bg-white/10 text-white"
@@ -706,6 +780,8 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                   </MenuItem>
                   <MenuItem>
                     <button
+                      type="button"
+                      onClick={() => setDeleteModal(true)}
                       className={`group flex w-full text-[#6C7275] font-medium text-[15px] items-center gap-2 rounded-lg py-1.5 px-3  ${
                         darkmode
                           ? "data-[focus]:bg-white/10 text-red-500"
@@ -1133,6 +1209,119 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
           </button>
         </motion.div>
       )}
+      {markAsFavorite && (
+        <motion.div
+          initial={{ opacity: 0, translateY: 50, translateX: 50 }}
+          animate={{ opacity: 1, translateY: 0, translateX: 0 }}
+          exit={{ opacity: 0, translateY: 50, translateX: 50 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="fixed bottom-4 right-4 z-50 bg-gray-900 text-white p-4 rounded-lg shadow-lg max-w-xs w-full flex justify-between items-center"
+        >
+          <p className="text-sm text-red-400">
+            <span className="font-semibold">
+              {markAsFavoriteState
+                ? "Chat marked as favorite"
+                : "Chat removed from favorite"}
+            </span>
+          </p>
+          <button
+            onClick={() => {
+              setMarkAsFavorite(false);
+            }}
+            className="text-gray-400 hover:text-white ml-4"
+            aria-label="Close"
+          >
+            ✖
+          </button>
+        </motion.div>
+      )}
+      {archivedAction && (
+        <motion.div
+          initial={{ opacity: 0, translateY: 50, translateX: 50 }}
+          animate={{ opacity: 1, translateY: 0, translateX: 0 }}
+          exit={{ opacity: 0, translateY: 50, translateX: 50 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="fixed bottom-4 right-4 z-50 bg-gray-900 text-white p-4 rounded-lg shadow-lg max-w-xs w-full flex justify-between items-center"
+        >
+          <p className="text-sm text-red-400">
+            <span className="font-semibold">
+              {archivedState ? "Chat archived" : "Unarchived chat"}
+            </span>
+          </p>
+          <button
+            onClick={() => {
+              setArchivedAction(false);
+            }}
+            className="text-gray-400 hover:text-white ml-4"
+            aria-label="Close"
+          >
+            ✖
+          </button>
+        </motion.div>
+      )}
+      {deleted && (
+        <motion.div
+          initial={{ opacity: 0, translateY: 50, translateX: 50 }}
+          animate={{ opacity: 1, translateY: 0, translateX: 0 }}
+          exit={{ opacity: 0, translateY: 50, translateX: 50 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="fixed bottom-4 right-4 z-50 bg-gray-900 text-white p-4 rounded-lg shadow-lg max-w-xs w-full flex justify-between items-center"
+        >
+          <p className="text-sm text-red-400">
+            <span className="font-semibold">{"Chat deleted successfully"}</span>
+          </p>
+          <button
+            onClick={() => {
+              setDeleted(false);
+            }}
+            className="text-gray-400 hover:text-white ml-4"
+            aria-label="Close"
+          >
+            ✖
+          </button>
+        </motion.div>
+      )}
+
+      {loading && (
+        <div className="fixed w-full bg-black/50 h-full flex items-center justify-center left-0 right-0 top-0 bottom-0 inset-0 z-50">
+          <FadeLoader color="white" />
+        </div>
+      )}
+
+      <ModalV2
+        isOpen={deleteModal}
+        isClose={() => setDeleteModal(false)}
+        maxWidth="w-[500px]"
+        edges="rounded-2xl"
+      >
+        <div className="flex flex-col gap-y-4 py-7">
+          <span className="text-lg font-semibold border-b text-left pb-3 pl-5">
+            Delete Chat?
+          </span>
+          <div className="flex flex-col items-end justify-start px-5">
+            <span className="w-full text-start text-[16px] font-medium">
+              This action is not{" "}
+              <span className="font-semibold text-lg">Reversible!</span>
+            </span>
+            <div className="flex gap-x-2 pt-4">
+              <button
+                type="button"
+                onClick={() => setDeleteModal(false)}
+                className="w-[100px] py-2 rounded-3xl bg-[#E8ECEF] text-gray-500"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteChat(chatId)}
+                className="w-[100px] py-2  rounded-3xl bg-red-500 text-white"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </ModalV2>
     </div>
   );
 }

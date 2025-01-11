@@ -12,7 +12,11 @@ import { useAppDispatch } from "../../hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginTypes } from "../../services/auth/type";
 import { LoginApi } from "../../services/auth/auth.service";
-import { setToken, setUser } from "../../states/slices/authReducer";
+import {
+  setToken,
+  setUser,
+  setUserName,
+} from "../../states/slices/authReducer";
 import { clearChats, setMessage } from "../../states/slices/globalReducer";
 import ButtonV2 from "../../shared/components/buttonV2";
 
@@ -91,6 +95,7 @@ function SignIn() {
 
         dispatch(clearChats());
         dispatch(setUser(response?.data));
+        dispatch(setUserName(response?.data?.username));
         dispatch(setToken(response?.data?.token));
         dispatch(setMessage([]));
         navigate("/");

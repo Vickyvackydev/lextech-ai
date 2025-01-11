@@ -9,23 +9,16 @@ import {
   MenuItems,
   Transition,
 } from "@headlessui/react";
-import { useEffect, useState, useRef } from "react";
-import { BiLogOut } from "react-icons/bi";
-import {
-  FaCheck,
-  FaEllipsisH,
-  FaEllipsisV,
-  FaSignOutAlt,
-} from "react-icons/fa";
+import { useState, useRef } from "react";
+
+import { FaSignOutAlt } from "react-icons/fa";
 
 import Tooltip from "@mui/material/Tooltip";
 
 import ButtonV2 from "../buttonV2";
-import { Bounce, Fade } from "react-awesome-reveal";
+import { Fade } from "react-awesome-reveal";
 
 import { Skeleton } from "@mui/material";
-
-import toast from "react-hot-toast";
 
 import { FaUser } from "react-icons/fa6";
 import { useQuery } from "react-query";
@@ -36,9 +29,7 @@ import {
   passPreviouseChats,
   selectDarkmode,
   setChatId,
-  setChats,
   setLiveCaption,
-  setMessage,
   setSettings,
 } from "../../../states/slices/globalReducer";
 
@@ -49,8 +40,8 @@ import {
   ONLINE_STATUS,
   TRASH,
 } from "../../../utils-func/image_exports";
-import { formatTimeElapsed } from "../../../utils-func/functions";
-import { date } from "zod";
+import { formatDate, formatTimeElapsed } from "../../../utils-func/functions";
+import { selectProfile, selectUser } from "../../../states/slices/authReducer";
 
 interface SidebarProps {
   open: boolean;
@@ -58,22 +49,12 @@ interface SidebarProps {
   setOpen: any;
 }
 
-interface MessageType {
-  messages: [
-    {
-      chat_id: string;
-      content: string;
-    }
-  ];
-}
-
 const SidebarV2 = (props: SidebarProps) => {
   const { open, onClose, setOpen } = props;
   const dispatch = useAppDispatch();
-  const btnRef = useRef<HTMLDivElement>(null);
+  const user = useAppSelector(selectProfile);
   const [loading, setLoading] = useState(false);
-  const [showLogOutBox, setShowLogOutBox] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
+
   const location = useLocation();
   const ChatId = location.pathname.split("/").pop();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -90,23 +71,11 @@ const SidebarV2 = (props: SidebarProps) => {
       id: mess.id,
       sender: mess.sender,
       content: mess.content,
-      created_at: new Date(mess.created_at).toLocaleTimeString("en-us", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
+      created_at: formatDate(mess.created_at),
     }));
     dispatch(passPreviouseChats(selectedChatMessages));
     navigate(`/chat/${id}`);
     dispatch(setChatId(id));
-  };
-  const handleSelectId = (id: string) => {
-    setSelectedIds(
-      (prevId: any) =>
-        prevId.includes(id)
-          ? prevId.filter((_id: any) => _id !== id) // unselect ids
-          : [...prevId, id] // select id
-    );
   };
 
   console.log(ChatHistory);
@@ -198,7 +167,7 @@ const SidebarV2 = (props: SidebarProps) => {
                 <Tooltip title="Profile">
                   <div className="relative">
                     <img
-                      src={MAN}
+                      src={user?.image ?? MAN}
                       className="w-[40px] h-[40px] rounded-full"
                       alt="image"
                     />
@@ -274,14 +243,6 @@ const SidebarV2 = (props: SidebarProps) => {
                   {ChatHistory?.data?.length}/{ChatHistory?.meta?.total}
                 </div>
               </div>
-              {selectedIds.length > 0 && (
-                <img
-                  src={TRASH}
-                  className="w-[20px] h-[20px] cursor-pointer"
-                  alt=""
-                  // onClick={(e) => handleDeleteChat(selectedIds, e)}
-                />
-              )}
             </div>
             <Fade direction="up" duration={1000}>
               <div className="mt-16 flex flex-col gap-y-3 h-[400px] max-h-[400px] overflow-y-scroll">

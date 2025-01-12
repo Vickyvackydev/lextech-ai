@@ -71,7 +71,7 @@ const SidebarV2 = (props: SidebarProps) => {
       id: mess.id,
       sender: mess.sender,
       content: mess.content,
-      created_at: formatDate(mess.created_at),
+      created_at: mess.created_at,
     }));
     dispatch(passPreviouseChats(selectedChatMessages));
     navigate(`/chat/${id}`);
@@ -292,7 +292,11 @@ const SidebarV2 = (props: SidebarProps) => {
                                 ? `${item?.title.slice(0, 15)}...`
                                 : item?.title}
                             </span>
-                            <span className={`text-xs font-medium  `}>
+                            <span
+                              className={`text-xs font-medium ${
+                                darkmode ? "text-gray-300" : ""
+                              } `}
+                            >
                               {item.messages
                                 .filter((mes) => mes.sender === "assistant")[0]
                                 ?.content?.slice(0, 40)}

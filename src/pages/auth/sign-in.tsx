@@ -17,23 +17,18 @@ import {
   setUser,
   setUserName,
 } from "../../states/slices/authReducer";
-import { clearChats, setMessage } from "../../states/slices/globalReducer";
+import {
+  clearChats,
+  setMessage,
+  setSettings,
+} from "../../states/slices/globalReducer";
 import ButtonV2 from "../../shared/components/buttonV2";
 
-// export default function SignIn() {
-//   return (
-//     <Suspense fallback={<div>Loading...</div>}>
-//    <LoginForm />
-//    </Suspense>
-
-// //   )
-// // }
 type LoginFormValues = z.infer<typeof LoginSchema>;
 function SignIn() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
-  const SearchParams = useSearchParams();
 
   const { register, handleSubmit, setValue, watch } = useForm<
     z.infer<typeof LoginSchema>
@@ -60,24 +55,7 @@ function SignIn() {
 
     setValue(name as keyof LoginFormValues, value, { shouldValidate: true });
   };
-  // const onSubmit = (data: z.infer<typeof LoginSchema>) => {
-  //   startTransition(() => {
-  //     login(data).then((data) => {
-  //       if (data?.error) {
-  //         toast.error(data?.error || urlError);
 
-  //         return;
-  //       }
-  //       toast.success(data?.success! || "Successfully logged in");
-  //       setFormData({
-  //         email: "",
-  //         password: "",
-  //       });
-
-  //       // router.push("/sign-in")
-  //     });
-  //   });
-  // };
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -89,10 +67,7 @@ function SignIn() {
     try {
       const response = await LoginApi(payload);
       if (response) {
-        // toast.success(response?.data?.message, {
-        //   duration: 10000,
-        // });
-
+        dispatch(setSettings(false));
         dispatch(clearChats());
         dispatch(setUser(response?.data));
         dispatch(setUserName(response?.data?.username));
@@ -190,5 +165,3 @@ function SignIn() {
 }
 
 export default SignIn;
-
-//update login.tsx and auth.ts by removing the commented part of emailverified code so that it can only accept verified users. Also update the social.tsx component to only show google by turning the show state to true.

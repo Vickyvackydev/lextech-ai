@@ -16,6 +16,14 @@ export const LoginApi = async (data: LoginTypes) => {
   return response?.data;
 };
 
+export const deleteAccountApi = async (
+  password: { password: string },
+  id: number | string
+) => {
+  const response = await API.post(`/delete-account/${id}`, password);
+  return response?.data;
+};
+
 export const UpdatePasswordApi = async (
   data: UpdatePasswordTypes,
   id: number | string
@@ -27,6 +35,14 @@ export const UpdatePasswordApi = async (
 export const SessionApi = async () => {
   const response = await API.get("/sessions");
   return response?.data?.data;
+};
+export const RemoveAllSessionApi = async () => {
+  const response = await API.post("/sessions/revoke-all");
+  return response?.data;
+};
+export const deleteSessionApi = async (id: number | string) => {
+  const response = await API.delete(`/sessions/${id}/revoke`);
+  return response?.data;
 };
 
 export const editProfileApi = async (

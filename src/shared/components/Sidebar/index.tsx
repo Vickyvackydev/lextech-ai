@@ -74,6 +74,7 @@ import {
   PROFILE_,
   PROFILE_GRAY_ICON,
   SEARCH_ICON,
+  SEARCH_NOT_FOUND,
   SESSION_ICON,
   SESSION_ICON_DARK,
   SETTINGS_ICON,
@@ -86,7 +87,10 @@ import {
   formatTimeElapsed,
 } from "../../../utils-func/functions";
 import {
+  deleteAccountApi,
+  deleteSessionApi,
   editProfileApi,
+  RemoveAllSessionApi,
   SessionApi,
   UpdatePasswordApi,
 } from "../../../services/auth/auth.service";
@@ -96,7 +100,8 @@ import {
   getFavoritesChats,
 } from "../../../services/chat/chat.service";
 import toast from "react-hot-toast";
-import { FaWindows } from "react-icons/fa";
+import { FaTimes, FaWindows } from "react-icons/fa";
+import { FadeLoader } from "react-spinners";
 
 interface SidebarProps {
   open: boolean;
@@ -108,7 +113,7 @@ const Sidebar = (props: SidebarProps) => {
   const { onClose } = props;
   const user = useAppSelector(selectUser);
   const [tab, setTab] = useState("edit-profile");
-  // const [settings, setSettings] = useState(false);
+  const [archivedChatsModal, setArchivedChatsModal] = useState(true);
   const dispatch = useAppDispatch();
   const settings = useAppSelector(showSettings);
   const open = useAppSelector(SelectOpenState);
@@ -116,6 +121,7 @@ const Sidebar = (props: SidebarProps) => {
   const [lists, setLists] = useState(false);
   const { data: favorites } = useQuery("favorites", getFavoritesChats);
   const { data: archived } = useQuery("favorites", getArchivedChats);
+  const { data: sessions } = useQuery("sessions", SessionApi);
 
   const switchTabs = () => {
     switch (tab) {
@@ -139,7 +145,7 @@ const Sidebar = (props: SidebarProps) => {
   };
   const username = useAppSelector(selectUserName);
   const userImg = useAppSelector(selectProfile);
-  const [hasMore, setHasMore] = useState(false);
+
   const { data: ChatHistory, isLoading } = useQuery("chats", getChats);
 
   // const {
@@ -826,6 +832,134 @@ const Sidebar = (props: SidebarProps) => {
           </div>
         </div>
       )}
+
+      <ModalV2
+        isOpen={archivedChatsModal}
+        isClose={() => setArchivedChatsModal(false)}
+        edges="rounded-2xl"
+        maxWidth="w-[900px]"
+      >
+        <div className="py-6 bg-gray-900 rounded-2xl text-white">
+          {/* Modal Header */}
+          <div className="flex justify-between items-center pb-4 border-b px-6 border-gray-700">
+            <h2 className="text-lg font-semibold">Archived Chats</h2>
+            <button
+              className={` w-[35px] h-[35px] rounded-full flex justify-center items-center ${
+                darkmode ? "hover:bg-white/20" : "hover:bg-gray-400"
+              }`}
+              onClick={() => setArchivedChatsModal(false)}
+            >
+              {/* <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 9a1 1 0 01-.707-1.707l6-6a1 1 0 011.414 1.414L11.414 9l5.293 5.293a1 1 0 01-1.414 1.414l-6-6A1 1 0 0110 9z"
+                  clipRule="evenodd"
+                />
+              </svg> */}
+              <FaTimes color="white" />
+            </button>
+          </div>
+
+          <div className="mt-4">
+            <div className="grid grid-cols-3 px-6 items-center text-start px-6 gap-4 text-sm text-gray-400 font-medium border-b border-gray-700 pb-2">
+              <span>Name</span>
+              <span>Date created</span>
+              <span className="text-right">Actions</span>
+            </div>
+
+            <div className="space-y-4 mt-4">
+              <div className="grid grid-cols-3 px-6 items-center gap-4 text-sm text-start">
+                <span className="truncate text-white">Redux Chat Bug Fix</span>
+                <span className="text-gray-400">January 10, 2025</span>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    className="text-gray-400 hover:text-white"
+                    title="Unarchive conversation"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M3 3h18v18H3V3zm16 16V5H5v14h14z" />
+
+                      <path
+                        d="M12 16V9m-3 3 3-3 3 3"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    className="text-red-500 hover:text-red-700"
+                    title="Delete conversation"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M9 3h6a1 1 0 011 1v1h3a1 1 0 110 2H5a1 1 0 010-2h3V4a1 1 0 011-1zm-3 5h12v13a2 2 0 01-2 2H8a2 2 0 01-2-2V8z" />
+
+                      <path d="M10 10v8a1 1 0 102 0v-8a1 1 0 10-2 0zm4 0v8a1 1 0 102 0v-8a1 1 0 10-2 0zM8 10v8a1 1 0 102 0v-8a1 1 0 10-2 0z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 px-6 items-center gap-4 text-sm text-start">
+                <span className="truncate text-white">Redux Chat Bug Fix</span>
+                <span className="text-gray-400">January 10, 2025</span>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    className="text-gray-400 hover:text-white"
+                    title="Unarchive conversation"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M3 3h18v18H3V3zm16 16V5H5v14h14z" />
+
+                      <path
+                        d="M12 16V9m-3 3 3-3 3 3"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    className="text-red-500 hover:text-red-700"
+                    title="Delete conversation"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M9 3h6a1 1 0 011 1v1h3a1 1 0 110 2H5a1 1 0 010-2h3V4a1 1 0 011-1zm-3 5h12v13a2 2 0 01-2 2H8a2 2 0 01-2-2V8z" />
+
+                      <path d="M10 10v8a1 1 0 102 0v-8a1 1 0 10-2 0zm4 0v8a1 1 0 102 0v-8a1 1 0 10-2 0zM8 10v8a1 1 0 102 0v-8a1 1 0 10-2 0z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ModalV2>
+
       <ModalV2
         isOpen={modalIsOpen}
         isClose={() => dispatch(setSearcModal(false))}
@@ -930,11 +1064,11 @@ const Sidebar = (props: SidebarProps) => {
               </div>
             ))
           ) : (
-            <div className="flex flex-col items-center justify-center gap-y-2">
+            <div className="flex flex-col py-10 items-center justify-center gap-y-2">
               <img
-                src={"/svg/empty-filter.png"}
-                width={isMobileView ? 200 : 300}
-                height={isMobileView ? 200 : 300}
+                src={SEARCH_NOT_FOUND}
+                width={isMobileView ? 200 : 100}
+                height={isMobileView ? 200 : 100}
                 alt="filter image"
               />
               <span className="text-2xl font-medium text-gray-400">
@@ -1027,29 +1161,31 @@ const Sidebar = (props: SidebarProps) => {
                 </span>
               </div>
             </div> */}
-            <div className="w-full flex flex-col gap-y-3 cursor-pointer">
-              <div
-                onClick={() => setTab("session")}
-                className={`flex items-center justify-start pl-4 gap-x-3 ${
-                  tab === "session" && "border-2 border-[#007AFF]"
-                } ${
-                  darkmode ? "text-[#FEFEFE]" : "text-[#4C4C4C]"
-                }  rounded-3xl w-[237px] h-[42px]  `}
-              >
-                <img
-                  src={tab === "session" ? SESSION_ICON_DARK : SESSION_ICON}
-                  className="w-[24px] h-[24px]"
-                  alt=""
-                />
-                <span
-                  className={` ${
+            {sessions?.length > 0 && (
+              <div className="w-full flex flex-col gap-y-3 cursor-pointer">
+                <div
+                  onClick={() => setTab("session")}
+                  className={`flex items-center justify-start pl-4 gap-x-3 ${
+                    tab === "session" && "border-2 border-[#007AFF]"
+                  } ${
                     darkmode ? "text-[#FEFEFE]" : "text-[#4C4C4C]"
-                  } font-semibold text-[18px]`}
+                  }  rounded-3xl w-[237px] h-[42px]  `}
                 >
-                  Sessions
-                </span>
+                  <img
+                    src={tab === "session" ? SESSION_ICON_DARK : SESSION_ICON}
+                    className="w-[24px] h-[24px]"
+                    alt=""
+                  />
+                  <span
+                    className={` ${
+                      darkmode ? "text-[#FEFEFE]" : "text-[#4C4C4C]"
+                    } font-semibold text-[18px]`}
+                  >
+                    Sessions
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
             <div className="w-full flex flex-col gap-y-3 cursor-pointer">
               <div
                 onClick={() => setTab("appearance")}
@@ -1268,7 +1404,7 @@ export const EditProfile = () => {
               value={formdata.first_name}
               onChange={handleInputChange}
               className={`w-full ${
-                darkmode ? "text-[#A3A3A3]" : "text-black"
+                darkmode ? "text-gray-300" : "text-black"
               } bg-transparent outline-none placeholder:text-[#A3A3A3] placeholder:text-[16px]`}
             />
           </div>
@@ -1294,7 +1430,7 @@ export const EditProfile = () => {
               value={formdata.last_name}
               onChange={handleInputChange}
               className={`w-full ${
-                darkmode ? "text-[#A3A3A3]" : "text-black"
+                darkmode ? "text-gray-300" : "text-black"
               } bg-transparent outline-none placeholder:text-[#A3A3A3] placeholder:text-[16px]`}
             />
           </div>
@@ -1320,7 +1456,7 @@ export const EditProfile = () => {
               value={formdata.location}
               onChange={handleInputChange}
               className={`w-full ${
-                darkmode ? "text-[#A3A3A3]" : "text-black"
+                darkmode ? "text-gray-300" : "text-black"
               } bg-transparent outline-none placeholder:text-[#A3A3A3] placeholder:text-[16px]`}
             />
           </div>
@@ -1346,7 +1482,7 @@ export const EditProfile = () => {
               value={formdata.bio}
               onChange={handleInputChange}
               className={`w-full resize-none bg-transparent outline-none  ${
-                darkmode ? "text-[#A3A3A3]" : "text-black"
+                darkmode ? "text-gray-300" : "text-black"
               } placeholder:text-[#A3A3A3] placeholder:text-[16px]`}
             />
           </div>
@@ -1630,9 +1766,46 @@ export const Notification = () => {
 };
 export const Session = () => {
   const darkmode = useAppSelector(selectDarkmode);
-  const { data: allSessions } = useQuery("sessions", SessionApi);
+  const [loading, setLoading] = useState(false);
+  const [selectedId, setSelectedId] = useState<any>(0);
+  const [signingOut, setSigningOut] = useState(false);
+  const { data: allSessions, refetch } = useQuery("sessions", SessionApi);
 
-  console.log(allSessions);
+  const handleRevokeSession = async (id: number | string) => {
+    setLoading(true);
+    setSelectedId(id);
+    try {
+      const response = await deleteSessionApi(id);
+      if (response) {
+        toast.success(response?.data?.message);
+        refetch();
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleRevokeAllSessions = async () => {
+    setSigningOut(true);
+
+    try {
+      const response = await RemoveAllSessionApi();
+      if (response) {
+        toast.success(response?.data?.message);
+        refetch();
+
+        // window.history.replaceState({}, "", "/sign-in");
+        // setTimeout(() => {
+        //   window.location.reload();
+        // }, 1000);
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message);
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   return (
     <div className="w-full flex flex-col items-start justify-start">
@@ -1699,11 +1872,13 @@ export const Session = () => {
                   </div>
                   <ButtonV2
                     title="Revoke"
+                    disabled={selectedId === item.id && loading}
+                    loading={selectedId === item.id && loading}
                     btnStyle={`border ${
                       darkmode ? "border-gray-700" : "border-[#CECECE]"
                     }  rounded-xl py-2 px-5`}
                     textStyle={darkmode ? "text-[#A3A3A3]" : "text-black"}
-                    handleClick={() => {}}
+                    handleClick={() => handleRevokeSession(item.id)}
                   />
                 </div>
                 {/* <div
@@ -1775,9 +1950,11 @@ export const Session = () => {
           )}
       </div>
       <ButtonV2
+        loading={signingOut}
+        disabled={signingOut}
         title="Sign out of all devices"
         btnStyle=" rounded-lg w-full my-6 h-[62px] flex items-center justify-center bg-[#1787FC]"
-        handleClick={() => {}}
+        handleClick={handleRevokeAllSessions}
         textStyle="text-white font-semibold"
       />
     </div>
@@ -1846,7 +2023,29 @@ export const Appearance = () => {
   );
 };
 export const DeleteAccount = () => {
+  const [deleteModal, setDeleteModal] = useState(false);
   const darkmode = useAppSelector(selectDarkmode);
+  const user = useAppSelector(selectUser);
+  const [password, setPassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const handleDeleteAccount = async () => {
+    setDeleteModal(false);
+    setDeleting(true);
+    try {
+      const response = await deleteAccountApi({ password }, user?.id);
+      if (response) {
+        window.history.replaceState({}, "", "sign-up");
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
   return (
     <div className="w-full flex flex-col items-start justify-start">
       <div className="flex flex-col items-start gap-y-3 w-full ">
@@ -1867,7 +2066,13 @@ export const DeleteAccount = () => {
       </div>
       <div className="mt-10 w-full flex flex-col gap-y-6">
         <div className="w-full flex items-start flex-col gap-y-1">
-          <span className="text-[16px] font-semibold">Password</span>
+          <span
+            className={`text-[16px] font-semibold ${
+              darkmode && "text-gray-300"
+            }`}
+          >
+            Password
+          </span>
           <div
             className={` ${
               darkmode ? "bg-[#4C4C4C]" : "bg-[#F3F5F7]"
@@ -1876,6 +2081,10 @@ export const DeleteAccount = () => {
             <img src={PAD_LOCK} className="w-[24px] h-[24px]" alt="" />
             <input
               type="password"
+              value={password}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setPassword(e.target.value)
+              }
               placeholder="Password"
               className={`w-full bg-transparent outline-none  ${
                 darkmode ? "text-[#A3A3A3]" : "text-black"
@@ -1884,13 +2093,75 @@ export const DeleteAccount = () => {
           </div>
         </div>
         <ButtonV2
-          disabled
+          loading={deleting}
+          disabled={password === "" || deleting}
           title="Delete account"
-          btnStyle=" bg-opacity-50 bg-[#D84210] rounded-lg w-full h-[62px] flex items-center justify-center bg-[#1787FC]"
-          handleClick={() => {}}
+          btnStyle={` ${
+            password === "" || deleting ? "opacity-30" : "bg-opacity-50"
+          } rounded-lg w-full h-[62px] flex items-center justify-center  bg-[#D84210]`}
+          handleClick={() => setDeleteModal(true)}
           textStyle="text-white font-semibold"
         />
       </div>
+
+      {deleting && (
+        <div className="fixed w-full bg-black/50 h-full flex items-center justify-center left-0 right-0 top-0 bottom-0 inset-0 z-50">
+          <FadeLoader color="white" />
+        </div>
+      )}
+
+      <ModalV2
+        isOpen={deleteModal}
+        isClose={() => setDeleteModal(false)}
+        maxWidth="w-[500px]"
+        edges="rounded-2xl"
+      >
+        <div className="flex flex-col gap-y-4 py-7">
+          <span
+            className={`text-lg font-semibold border-b text-left pb-3 pl-5 ${
+              darkmode ? "text-gray-400 border-gray-700" : "text-[#c4c4c4]"
+            }`}
+          >
+            Delete Account?
+          </span>
+          <div className="flex flex-col items-end justify-start px-5">
+            <span
+              className={`w-full text-start text-[16px] font-medium ${
+                darkmode ? "text-gray-400" : "text-[#c4c4c4]"
+              }`}
+            >
+              Are you sure you want to delete this account?
+            </span>
+            <span
+              className={`w-full text-start text-sm text-red-500 font-medium ${
+                darkmode ? "text-gray-400" : "text-[#c4c4c4]"
+              }`}
+            >
+              Note: You will loose all your details and chats!
+            </span>
+            <div className="flex gap-x-2 pt-4">
+              <button
+                type="button"
+                onClick={() => setDeleteModal(false)}
+                className={`w-[100px] py-2 rounded-3xl ${
+                  darkmode
+                    ? "bg-white/10 text-white border border-gray-700"
+                    : "bg-[#E8ECEF] text-gray-500"
+                }  `}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                className="w-[100px] py-2  rounded-3xl bg-red-500 text-white"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </ModalV2>
     </div>
   );
 };

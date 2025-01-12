@@ -72,3 +72,4 @@ export { default as STAR_ICON_ } from "../assets/icons/star-icon.svg";
 export { default as SPEAKER } from "../assets/images/speak.svg";
 export { default as SPEAKING } from "../assets/images/speaking.gif";
 export { default as CAPTIONS } from "../assets/icons/closed-caption.svg";
+export { default as SEARCH_NOT_FOUND } from "../assets/images/search-not-found.png";

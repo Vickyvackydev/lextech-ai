@@ -75,7 +75,7 @@ import { Tooltip } from "@mui/material";
 import { PreviewAttachment } from "../../shared/components/custom/preview-attachment";
 import { StopIcon } from "../../shared/components/custom/icons";
 import Onboarding from "../../shared/components/custom/onboarding";
-import { late } from "zod";
+import { array, late } from "zod";
 import toast from "react-hot-toast";
 import ModalV2 from "../../shared/components/modalV2";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -84,6 +84,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   const [attachments, setAttachments] = useState<any>([]);
   const username = useAppSelector(selectUserName);
   const user = useAppSelector(selectUser);
+  const [selectedFiles, setSelectedFiles] = useState<any[]>([]);
   const [listening, setListening] = useState(false);
   const [userStartedSpeaking, setUserStartedSpeaking] = useState(false);
   const [placeHolder, setPlaceHolder] = useState("Type a message...");
@@ -259,7 +260,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
       setChats({
         sender: "user",
         content: mess,
-        created_at: formatDate(timeStamp),
+        created_at: timeStamp,
       })
     );
     setMessage("");
@@ -382,35 +383,92 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
     }
   };
 
-  const handleFileChange = useCallback(
-    async (event: ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(event.target.files || []);
-      setUploadQueue(files.map((file) => file.name));
+  // const handleFileChange = useCallback(
+  //   async (event: ChangeEvent<HTMLInputElement>) => {
+  //     const files = Array.from(event.target.files || []);
+  //     setUploadQueue(files.map((file) => file.name));
 
-      try {
-        const uploadPromises = files.map((file) => uploadFile(file));
-        const uploadedAttachments = await Promise.all(uploadPromises);
-        const successfullyUploadedAttachments = uploadedAttachments.filter(
-          (attachment) => attachment !== undefined
-        );
+  //     try {
+  //       const uploadPromises = files.map((file) => uploadFile(file));
+  //       const uploadedAttachments = await Promise.all(uploadPromises);
+  //       const successfullyUploadedAttachments = uploadedAttachments.filter(
+  //         (attachment) => attachment !== undefined
+  //       );
 
-        setAttachments((currentAttachments: any) => [
-          ...currentAttachments,
-          ...successfullyUploadedAttachments,
-        ]);
-      } catch (error) {
-        console.error("Comprehensive upload error:", error);
-        toast.error("Failed to upload files");
-      } finally {
-        setUploadQueue([]);
-        // Reset the file input
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
+  //       setAttachments((currentAttachments: any) => [
+  //         ...currentAttachments,
+  //         ...successfullyUploadedAttachments,
+  //       ]);
+  //     } catch (error) {
+  //       console.error("Comprehensive upload error:", error);
+  //       toast.error("Failed to upload files");
+  //     } finally {
+  //       setUploadQueue([]);
+  //       // Reset the file input
+  //       if (fileInputRef.current) {
+  //         fileInputRef.current.value = "";
+  //       }
+  //     }
+  //   },
+  //   [setAttachments]
+  // );
+
+  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (!e.target.files) return;
+  //   const selectedFiles = Array.from(e.target.files);
+  //   const allowedFiles = [
+  //     "image/jpeg",
+  //     "image/png",
+  //     "image/jpg",
+  //     "application/pdf",
+  //   ];
+  //   const maxSize = 5 * 1024 * 1024;
+
+  //   const validFiles: File[] = [];
+  //   let error = "";
+  //   selectedFiles.forEach((file) => {
+  //     if (!allowedFiles.includes(file.type)) {
+  //       error = `${file.name} is not supported`;
+  //     } else if (file.size > maxSize) {
+  //       error = `${file.name} exceeds size limit`;
+  //     } else {
+  //       validFiles.push(file);
+  //     }
+
+  //     if (error) {
+  //       toast.error(error);
+  //     } else {
+  //       setFiles((prevFiles) => [...prevFiles, ...validFiles]);
+  //       toast.success("file uploaded");
+  //     }
+  //   });
+  // };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+
+    if (files) {
+      const selectedFiles = Array.from(files).slice(0, 3);
+      const validFiles = selectedFiles.filter((file) => file.size <= 5000000);
+
+      const filesWithPreview = validFiles.map((file) => {
+        if (file.type.startsWith("image/")) {
+          return {
+            ...file,
+            preview: URL.createObjectURL(file),
+          };
+        } else {
+          return {
+            ...file,
+            preview: null,
+          };
         }
-      }
-    },
-    [setAttachments]
-  );
+      });
+
+      setSelectedFiles(filesWithPreview);
+    }
+  };
+
   const handleControlKeyDown = (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === "f") {
       event.preventDefault();
@@ -684,6 +742,10 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
               </Tooltip>
               <Tooltip title="Share">
                 <div
+                  onClick={() => {
+                    copyToClipboard(window.location.href);
+                    toast.success("Link copied to clipboard");
+                  }}
                   className={`flex items-center justify-center ${
                     darkmode ? "hover:bg-white/10 " : "hover:bg-[#F3F5F7]"
                   } w-[30px] h-[30px] rounded-md`}
@@ -731,9 +793,9 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                     <button
                       type="button"
                       onClick={() => handleMarkChatAsFavorite(chatId)}
-                      className={`group flex w-full text-[#6C7275] font-normal text-[15px] items-center gap-2 rounded-lg py-1.5 px-3  ${
+                      className={`group flex w-full  font-normal text-[15px] items-center gap-2 rounded-lg py-1.5 px-3  ${
                         darkmode
-                          ? "data-[focus]:bg-white/10 text-white"
+                          ? "data-[focus]:bg-white/10 text-gray-400"
                           : "data-[focus]:bg-[#F3F5F7] text-[#6C7275]"
                       } `}
                     >
@@ -747,7 +809,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                       onClick={() => handleArchiveChat(chatId)}
                       className={`group flex w-full text-[#6C7275] font-normal text-[15px] items-center gap-2 rounded-lg py-1.5 px-3  ${
                         darkmode
-                          ? "data-[focus]:bg-white/10 text-white"
+                          ? "data-[focus]:bg-white/10 text-gray-400"
                           : "data-[focus]:bg-[#F3F5F7] text-[#6C7275]"
                       } `}
                     >
@@ -763,9 +825,14 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                   <div className="my-1 h-px bg-white/5" />
                   <MenuItem>
                     <button
+                      type="button"
+                      onClick={() => {
+                        copyToClipboard(window.location.href);
+                        toast.success("Link copied to clipboard");
+                      }}
                       className={`group flex w-full text-[#6C7275] font-normal text-[15px] items-center gap-2 rounded-lg py-1.5 px-3  ${
                         darkmode
-                          ? "data-[focus]:bg-white/10 text-white"
+                          ? "data-[focus]:bg-white/10 text-gray-400"
                           : "data-[focus]:bg-[#F3F5F7] text-[#6C7275]"
                       } `}
                     >
@@ -1295,11 +1362,19 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
         edges="rounded-2xl"
       >
         <div className="flex flex-col gap-y-4 py-7">
-          <span className="text-lg font-semibold border-b text-left pb-3 pl-5">
+          <span
+            className={`text-lg font-semibold border-b text-left pb-3 pl-5 ${
+              darkmode ? "text-gray-400 border-gray-700" : "text-[#c4c4c4]"
+            }`}
+          >
             Delete Chat?
           </span>
           <div className="flex flex-col items-end justify-start px-5">
-            <span className="w-full text-start text-[16px] font-medium">
+            <span
+              className={`w-full text-start text-[16px] font-medium ${
+                darkmode ? "text-gray-400" : "text-[#c4c4c4]"
+              }`}
+            >
               This action is not{" "}
               <span className="font-semibold text-lg">Reversible!</span>
             </span>
@@ -1307,7 +1382,11 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
               <button
                 type="button"
                 onClick={() => setDeleteModal(false)}
-                className="w-[100px] py-2 rounded-3xl bg-[#E8ECEF] text-gray-500"
+                className={`w-[100px] py-2 rounded-3xl ${
+                  darkmode
+                    ? "bg-white/10 text-white border border-gray-700"
+                    : "bg-[#E8ECEF] text-gray-500"
+                }  `}
               >
                 Cancel
               </button>

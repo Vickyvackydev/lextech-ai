@@ -886,42 +886,18 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                       duration={500}
                       className="w-full flex flex-col items-end justify-end gap-y-2"
                     >
-                      {/* <div className="flex items-center gap-x-1">
-                    {mess.experimental_attachments !== undefined &&
-                      mess.experimental_attachments.length > 0 &&
-                      mess.experimental_attachments.map((file: any) => {
-                        return (
-                          <>
-                            {file.contentType.startsWith("image") ? (
-                              <Image
-                                src={file.url}
-                                width={100}
-                                height={100}
-                                className=" object-contain rounded-lg"
-                                alt=""
-                              />
-                            ) : (
-                              <div className="">
-                                <FaFilePdf size={100} color="red" />
-                              </div>
-                            )}
-                          </>
-                        );
-                      })}
-                  </div> */}
-
                       <div className="flex items-end flex-col gap-y-1">
                         <div
-                          className={`px-4  py-3 ${
+                          className={`px-4 py-3 ${
                             darkmode
                               ? "border-0 bg-[#232627]"
-                              : "border border-[#E8ECEF] bg-none"
-                          }  rounded-full h-full w-fit text-wrap`}
+                              : "border border-[#E8ECEF] bg-white"
+                          } rounded-2xl lg:max-w-md md:max-w-lg sm:max-w-sm max-w-full`}
                         >
                           <span
-                            className={`lg:text-[16px] text-sm font-semibold ${
-                              darkmode ? "text-white/80" : "text-[#6E6E6E] "
-                            } leading-relaxed`}
+                            className={`lg:text-base md:text-sm text-xs font-semibold ${
+                              darkmode ? "text-white/80" : "text-[#6E6E6E]"
+                            } break-words`}
                           >
                             {mess?.content}
                           </span>
@@ -932,18 +908,18 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                       </div>
                     </Fade>
                   ) : (
-                    <div className="w-full gap-y-2 flex items-start gap-x-2">
+                    <div className="w-full flex gap-y-2 items-start gap-x-2">
                       <img
                         src={AI_PHOTO}
                         className="lg:w-[30px] lg:h-[30px] w-[25px] h-[25px] "
                         alt=""
                       />
                       <div
-                        className="flex flex-col items-start gap-y-1"
+                        className="flex flex-col items-start gap-y-1 -mt-3"
                         onMouseEnter={() => setHoveredMessage(mess?.id)}
                         onMouseLeave={() => setHoveredMessage(null)}
                       >
-                        <div className="px-4 rounded-xl h-full">
+                        <div className="px-4 py-2  rounded-xl lg:max-w-full md:max-w-lg sm:max-w-sm max-w-full">
                           {mess.isLoading ? (
                             <PulseLoader
                               size={14}
@@ -951,15 +927,11 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                               className="mt-2"
                             />
                           ) : (
-                            <span className="lg:text-[16px] text-sm font-normal text-[#6E6E6E]">
+                            <span className="lg:text-base md:text-sm text-xs font-normal text-[#6E6E6E] break-words">
                               {colorizeText(mess?.content)}
                             </span>
                           )}
-                          {/* <span className="lg:text-[16px] text-sm font-normal text-[#6E6E6E]">
-                            {colorizeText(mess?.content)}
-                          </span> */}
                         </div>
-
                         <div
                           className={`flex items-center gap-x-2 ml-3 ${
                             hoveredMessage === mess?.id
@@ -973,10 +945,10 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                                 darkmode
                                   ? "hover:bg-white/10"
                                   : "text-gray-500 hover:bg-gray-200"
-                              }  w-[30px] h-[30px] rounded-md`}
+                              } w-[30px] h-[30px] rounded-md`}
                               onClick={() => readTextAloud(mess?.content)}
                             >
-                              <FaVolumeUp className="cursor-pointer " />
+                              <FaVolumeUp className="cursor-pointer" />
                             </span>
                           </Tooltip>
                           <Tooltip title="Copy">
@@ -985,10 +957,10 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                                 darkmode
                                   ? "hover:bg-white/10"
                                   : "text-gray-500 hover:bg-gray-200"
-                              }  w-[30px] h-[30px] rounded-md`}
+                              } w-[30px] h-[30px] rounded-md`}
                               onClick={() => handleCopy(mess?.content)}
                             >
-                              <FaCopy className="cursor-pointer " />
+                              <FaCopy className="cursor-pointer" />
                             </span>
                           </Tooltip>
                         </div>
@@ -1013,8 +985,16 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
       )}
 
       {isMobile ? (
-        <div className="fixed bottom-0 px-6 pb-10 bg-white w-full h-[150px] left-0">
-          <div className="w-full relative border-2 py-2 overflow-hidden border-[#E8ECEF] rounded-2xl flex flex-col items-center h-auto mt-9 px-3">
+        <div
+          className={`fixed bottom-0 px-6 pb-10 ${
+            darkmode ? "bg-[#141718]" : "bg-[#fbfcfe]"
+          } w-full h-[150px] left-0`}
+        >
+          <div
+            className={`w-full relative border-2 py-2 overflow-hidden ${
+              darkmode ? "border-[#343839]" : "border-[#E8ECEF]"
+            } rounded-2xl flex flex-col items-center h-auto mt-9 px-3`}
+          >
             <textarea
               name=""
               placeholder="Type a message..."
@@ -1028,11 +1008,13 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                 e.target.style.height = "auto";
                 e.target.style.height = `${e.target.scrollHeight}px`;
               }}
-              className="w-full resize-none outline-none bg-transparent px-3 py-1"
+              className={`w-full resize-none outline-none bg-transparent px-3 py-1 ${
+                darkmode ? "text-gray-300" : "text-black"
+              }`}
             />
 
             <div className="w-full flex items-center justify-between">
-              <button
+              {/* <button
                 // @ts-ignore
                 onClick={() => document.querySelector(".file_upload")?.click()}
               >
@@ -1041,33 +1023,86 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                   className="lg:w-[28px] lg:h-[28px] w-[25px] h-[25px]"
                   alt="Add Icon"
                 />
-              </button>
+              </button> */}
+              <Menu>
+                <MenuButton className="inline-flex -ml-4 items-start  gap-2 rounded-md  py-1.5 px-3 text-sm/6 font-semibold text-white focus:outline-none   data-[focus]:outline-1 data-[focus]:outline-white">
+                  <Tooltip title="Attach files">
+                    <img
+                      src={ADD_ICON}
+                      onClick={() => {}}
+                      className="w-[28px] h-[28px] "
+                      alt="Add Icon"
+                    />
+                  </Tooltip>
+                </MenuButton>
+
+                <MenuItems
+                  transition
+                  anchor="bottom start"
+                  className={`w-52 origin-top-right rounded-xl border border-white/5 ${
+                    darkmode ? "bg-[#232627]" : "bg-white"
+                  }  shadow-lg p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0`}
+                >
+                  <MenuItem>
+                    <button
+                      onClick={() => imageInputRef?.current?.click()}
+                      className={`group flex w-full text-[#6C7275] font-normal text-sm items-center gap-2 rounded-lg py-2 px-3  ${
+                        darkmode
+                          ? "data-[focus]:bg-white/10 text-white"
+                          : "data-[focus]:bg-[#F3F5F7] text-[#6C7275]"
+                      } `}
+                    >
+                      <FaImage size={16} color={"#007AFF"} />
+                      Upload image
+                    </button>
+                  </MenuItem>
+                  <MenuItem>
+                    <button
+                      onClick={() => fileInputRef?.current?.click()}
+                      className={`group flex w-full text-[#6C7275] font-normal text-sm items-center gap-2 rounded-lg py-1.5 px-3  ${
+                        darkmode
+                          ? "data-[focus]:bg-white/10 text-white"
+                          : "data-[focus]:bg-[#F3F5F7] text-[#6C7275]"
+                      } `}
+                    >
+                      <FaFilePdf size={16} color={"red"} />
+                      Upload document
+                    </button>
+                  </MenuItem>
+                </MenuItems>
+              </Menu>
               <input
                 type="file"
-                accept=""
+                accept="/image*"
+                ref={imageInputRef}
                 multiple
                 onChange={handleFileChange}
-                className="file_upload sr-only"
+                className="sr-only"
+              />
+              <input
+                type="file"
+                accept=".pdf"
+                ref={fileInputRef}
+                multiple
+                onChange={handleFileChange}
+                className="sr-only"
               />
 
-              {loading ? (
-                <div
-                  // onClick={() => stop()}
-                  className="border cursor-pointer border-gray-300 rounded-md flex items-center justify-center"
-                >
-                  <PulseLoader size={14} />
-                </div>
-              ) : (
-                <button type="button">
-                  <img
-                    src={SENDER}
-                    className={`lg:w-[35px] lg:h-[35px] w-[25px] h-[25px] ${
-                      !message.trim() && "opacity-50"
-                    }`}
-                    alt="Sender Icon"
-                  />
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSendMessage(message);
+                }}
+              >
+                <img
+                  src={SENDER}
+                  className={`lg:w-[35px] lg:h-[35px] w-[25px] h-[25px] ${
+                    !message.trim() && "opacity-50"
+                  }`}
+                  alt="Sender Icon"
+                />
+              </button>
             </div>
           </div>
         </div>

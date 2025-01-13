@@ -1,7 +1,3 @@
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
-/* eslint-disable react/jsx-no-useless-fragment */
-
 import {
   MenuButton,
   Menu,
@@ -10,16 +6,11 @@ import {
   Transition,
 } from "@headlessui/react";
 import { useState, useRef } from "react";
-
 import { FaSignOutAlt } from "react-icons/fa";
-
 import Tooltip from "@mui/material/Tooltip";
-
 import ButtonV2 from "../buttonV2";
 import { Fade } from "react-awesome-reveal";
-
 import { Skeleton } from "@mui/material";
-
 import { FaUser } from "react-icons/fa6";
 import { useQuery } from "react-query";
 import { useAppDispatch, useAppSelector, useMediaQuery } from "../../../hooks";
@@ -80,43 +71,6 @@ const SidebarV2 = (props: SidebarV2Props) => {
 
   console.log(ChatHistory);
 
-  // const {
-  //   data: chatHistory,
-  //   isLoading,
-  //   mutate,
-  // } = useSWR(`/api/history`, fetcher, {
-  //   revalidateOnFocus: false,
-  //   revalidateOnReconnect: false,
-  //   fallbackData: [],
-  //   onSuccess: (newData) => {
-  //     if (!newData || newData.length === 0) {
-  //       setHasMore(false);
-  //       setIsLoadingMore(false);
-  //     }
-  //     setIsLoadingMore(false);
-  //   },
-  // });
-  // useEffect(() => {
-  //   if (isLoadingMore) {
-  //     mutate();
-  //   }
-  // }, [isLoadingMore, mutate]);
-
-  // const handleDeleteChat = async (chatIds: string[], e: React.MouseEvent) => {
-  //   e.preventDefault();
-  //   e.stopPropagation();
-
-  //   try {
-  //     await deleteChats(chatIds);
-  //     // await mutate(); // Refresh the chat list
-  //     setLoading(false);
-  //     navigate("/");
-  //   } catch (error) {
-  //     console.error("Error deleting chat:", error);
-  //     toast.error("error deleting chat");
-  //   }
-  // };
-
   const isMobileView = useMediaQuery("(max-width: 640px)");
   const isTabletView = useMediaQuery("(max-width: 840px)");
   const darkmode = useAppSelector(selectDarkmode);
@@ -127,7 +81,7 @@ const SidebarV2 = (props: SidebarV2Props) => {
       {isMobileView || isTabletView ? (
         <Transition
           as="div"
-          className="fixed z-30 h-full w-56 flex-none bg-brand-light lg:static"
+          className="fixed z-30 top-0 h-full w-80 flex-none bg-brand-light lg:static"
           enter="transition-all ease-in duration-300"
           enterFrom="transform -translate-x-full"
           enterTo="transform -translate-x-0"
@@ -138,7 +92,7 @@ const SidebarV2 = (props: SidebarV2Props) => {
         >
           {/* mobile screen section */}
           <div
-            className={`flex h-screen z-20 flex-col py-7 w-[650px]  ${
+            className={`flex h-screen z-20 flex-col py-7   ${
               darkmode ? "bg-[#232627]" : "bg-[#FEFEFE]"
             }`}
             style={{ boxShadow: "inset 0 4px 6px rgba(0, 0, 0, 0.1)" }}

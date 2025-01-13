@@ -64,6 +64,7 @@ import {
   FaEllipsisH,
   FaFilePdf,
   FaImage,
+  FaStop,
   FaTrash,
   FaVolumeUp,
 } from "react-icons/fa";
@@ -122,6 +123,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   const liveCaptionPopUp = useAppSelector(showCaptionPopUp);
   const { copyToClipboard } = useClipboard();
   const [deleteModal, setDeleteModal] = useState(false);
+  const [readerSpeaking, setReaderSpeaking] = useState(false);
   const navigate = useNavigate();
 
   // console.log(chatMessages);
@@ -341,6 +343,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
       toast.error("no text to be read aloud");
       return;
     }
+    setReaderSpeaking(true);
 
     const textuttereance = new SpeechSynthesisUtterance(text);
     textuttereance.lang = "en-US";
@@ -939,18 +942,36 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                               : "opacity-0"
                           } text-white/30`}
                         >
-                          <Tooltip title="Read aloud">
-                            <span
-                              className={`flex items-center justify-center ${
-                                darkmode
-                                  ? "hover:bg-white/10"
-                                  : "text-gray-500 hover:bg-gray-200"
-                              } w-[30px] h-[30px] rounded-md`}
-                              onClick={() => readTextAloud(mess?.content)}
-                            >
-                              <FaVolumeUp className="cursor-pointer" />
-                            </span>
-                          </Tooltip>
+                          {readerSpeaking ? (
+                            <Tooltip title="Stop">
+                              <span
+                                className={`flex items-center justify-center ${
+                                  darkmode
+                                    ? "hover:bg-white/10"
+                                    : "text-gray-500 hover:bg-gray-200"
+                                } w-[30px] h-[30px] rounded-md`}
+                                onClick={() => {
+                                  window.speechSynthesis.cancel();
+                                  setReaderSpeaking(false);
+                                }}
+                              >
+                                <FaStop className="cursor-pointer" />
+                              </span>
+                            </Tooltip>
+                          ) : (
+                            <Tooltip title="Read aloud">
+                              <span
+                                className={`flex items-center justify-center ${
+                                  darkmode
+                                    ? "hover:bg-white/10"
+                                    : "text-gray-500 hover:bg-gray-200"
+                                } w-[30px] h-[30px] rounded-md`}
+                                onClick={() => readTextAloud(mess?.content)}
+                              >
+                                <FaVolumeUp className="cursor-pointer" />
+                              </span>
+                            </Tooltip>
+                          )}
                           <Tooltip title="Copy">
                             <span
                               className={`flex items-center justify-center ${

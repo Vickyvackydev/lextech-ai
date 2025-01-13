@@ -33,6 +33,7 @@ import {
 } from "../../../utils-func/image_exports";
 import { formatDate, formatTimeElapsed } from "../../../utils-func/functions";
 import { selectProfile, selectUser } from "../../../states/slices/authReducer";
+import { FadeLoader } from "react-spinners";
 
 interface SidebarV2Props {
   v2Open: boolean;
@@ -45,12 +46,23 @@ const SidebarV2 = (props: SidebarV2Props) => {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectProfile);
   const [loading, setLoading] = useState(false);
-
+  const [page, setPage] = useState(1);
   const location = useLocation();
   const ChatId = location.pathname.split("/").pop();
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   const [selectedIds, setSelectedIds] = useState<any>([]);
-  const { data: ChatHistory, isLoading } = useQuery("chats", getChats);
+  const { data: ChatHistory, isLoading } = useQuery(["chats", page], () =>
+    getChats(page)
+  );
+
+  const handlePageNext = () => {
+    setLoading(isLoading);
+    setPage(page + 1);
+  };
+  const handlePagePrev = () => {
+    setLoading(isLoading);
+    setPage(page - 1);
+  };
   const handleChatClick = (
     id: string,
     messages: any[],
@@ -194,6 +206,14 @@ const SidebarV2 = (props: SidebarV2Props) => {
                     {ChatHistory?.data?.length}/{ChatHistory?.meta?.total}
                   </div>
                 </div>
+                {/* {ChatHistory?.data?.length > 0 &&
+                  (loading ? (
+                    <FadeLoader />
+                  ) : (
+                    <button type="button" onClick={handlePageNext}>
+                      See more
+                    </button>
+                  ))} */}
               </div>
               <Fade direction="up" duration={1000}>
                 <div className="mt-16 flex flex-col gap-y-3 h-[400px] max-h-[400px] overflow-y-scroll">
@@ -405,7 +425,7 @@ const SidebarV2 = (props: SidebarV2Props) => {
                       : "bg-[#E8ECEF] border-0 text-[#6C7275]"
                   }  flex items-center shadow-md justify-center text-xs font-medium `}
                 >
-                  {ChatHistory?.data?.length}/{ChatHistory?.meta?.total}
+                  {ChatHistory?.meta?.to ?? 0}/{ChatHistory?.meta?.total}
                 </div>
               </div>
             </div>
@@ -481,7 +501,7 @@ const SidebarV2 = (props: SidebarV2Props) => {
                   )
                 ) : isLoading ? (
                   <>
-                    <div className="w-[80%]">
+                    {/* <div className="w-[80%]">
                       <Skeleton
                         className="w-full mb-4"
                         height={20}
@@ -504,6 +524,9 @@ const SidebarV2 = (props: SidebarV2Props) => {
                         height={20}
                         variant="rectangular"
                       />
+                    </div> */}
+                    <div className="flex items-center justify-center">
+                      <FadeLoader color="#6C7275BF" />
                     </div>
                   </>
                 ) : (
@@ -511,6 +534,24 @@ const SidebarV2 = (props: SidebarV2Props) => {
                     No recents chats
                   </div>
                 )}
+                {ChatHistory?.data?.length > 10 &&
+                  (loading ? (
+                    <FadeLoader />
+                  ) : (
+                    <button
+                      type="button"
+                      className="text-sm rounded-2xl hover:bg-gray-300 border border-gray-200 w-fit py-2 px-2 flex justify-center items-center self-center"
+                      onClick={() => {
+                        ChatHistory?.meta?.to === ChatHistory?.meta?.total
+                          ? handlePagePrev()
+                          : handlePageNext();
+                      }}
+                    >
+                      {ChatHistory?.meta?.to === ChatHistory?.meta?.total
+                        ? "See less"
+                        : "See more"}
+                    </button>
+                  ))}
               </div>
             </Fade>
           </div>

@@ -7,8 +7,12 @@ export const SendMessage = async (text: FormData) => {
   return response?.data;
 };
 
-export const getChats = async () => {
-  const response = await API.get("/chat");
+export const getChats = async (page: number) => {
+  const response = await API.get(`/chat?page=${page}`);
+  return response?.data;
+};
+export const getAllChats = async () => {
+  const response = await API.get(`/chat`);
   return response?.data;
 };
 export const deleteChat = async (id: string) => {

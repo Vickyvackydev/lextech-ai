@@ -3,7 +3,6 @@ import * as z from "zod";
 import React, { useState, FormEvent } from "react";
 import { Bounce, Fade } from "react-awesome-reveal";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { LoginSchema } from "../../lib/schemas";

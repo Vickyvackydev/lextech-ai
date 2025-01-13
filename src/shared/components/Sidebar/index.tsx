@@ -1086,7 +1086,7 @@ const Sidebar = (props: SidebarProps) => {
         edges="rounded-2xl"
         maxWidth="w-[1003px]"
       >
-        <div className="p-7 w-full flex items-start gap-x-[5rem]">
+        <div className="p-7 w-full flex flex-col md:flex-row items-start gap-x-[5rem] gap-y-[5rem]">
           <div className="flex flex-col gap-y-4">
             <div className="w-full flex flex-col cursor-pointer">
               <div
@@ -1209,7 +1209,7 @@ const Sidebar = (props: SidebarProps) => {
                 </span>
               </div>
             </div>
-            <div className="w-full flex flex-col gap-y-3 mt-11 cursor-pointer">
+            <div className="w-full flex flex-col gap-y-3 md:mt-11 cursor-pointer">
               <div
                 onClick={() => setTab("delete-account")}
                 className={`flex items-center justify-start pl-4 gap-x-3 ${

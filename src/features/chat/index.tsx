@@ -64,9 +64,11 @@ import {
   FaEllipsisH,
   FaFilePdf,
   FaImage,
+  FaStop,
   FaTrash,
   FaVolumeUp,
 } from "react-icons/fa";
+import { FaCircleInfo } from "react-icons/fa6";
 import { FaBoxArchive, FaShare, FaStar } from "react-icons/fa6";
 
 import { Fade } from "react-awesome-reveal";
@@ -113,15 +115,17 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatId = useAppSelector(selectChatId);
   const [loading, setLoading] = useState(false);
+  const [failedResponse, setFailedResponse] = useState(false);
   const { data: chatMessages, refetch: chatHistoryRefetch } = useQuery(
-    "chats",
-    getChats
+    ["chats", 1],
+    () => getChats(1)
   );
   const darkmode = useAppSelector(selectDarkmode);
   const liveCaption = useAppSelector(showCaption);
   const liveCaptionPopUp = useAppSelector(showCaptionPopUp);
   const { copyToClipboard } = useClipboard();
   const [deleteModal, setDeleteModal] = useState(false);
+  const [readerSpeaking, setReaderSpeaking] = useState(false);
   const navigate = useNavigate();
 
   // console.log(chatMessages);
@@ -256,6 +260,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   // };
 
   const handleStartChat = async (mess: string) => {
+    setFailedResponse(false);
     dispatch(
       setChats({
         sender: "user",
@@ -286,6 +291,8 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
         }
       }
     } catch (error: any) {
+      setFailedResponse(true);
+
       toast.error(error?.response?.data?.message || "Error occurred");
     } finally {
       dispatch(setIsLoading(false));
@@ -294,6 +301,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   };
 
   const handleContinueChat = async (mess: string) => {
+    setFailedResponse(false);
     dispatch(
       setChats({ sender: "user", content: mess, created_at: timeStamp })
     );
@@ -320,6 +328,8 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
         }
       }
     } catch (error: any) {
+      setFailedResponse(true);
+
       toast.error(error?.response?.data?.message || "Error occurred");
     } finally {
       dispatch(setIsLoading(false)); // Ensure loading state reset
@@ -341,6 +351,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
       toast.error("no text to be read aloud");
       return;
     }
+    setReaderSpeaking(true);
 
     const textuttereance = new SpeechSynthesisUtterance(text);
     textuttereance.lang = "en-US";
@@ -531,6 +542,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
       if (response) {
         // setArchivedAction(true);
         // setArchivedState(true);
+
         setMarkAsFavorite(true);
       }
     } catch (error: any) {
@@ -539,14 +551,13 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
       setLoading(false);
     }
   };
-  const handleRemoveChatAsFavorite = (id: string) => {};
+
   const handleArchiveChat = async (id: string) => {
     setLoading(true);
     try {
       const response = await archiveChat(id);
       if (response) {
         setArchivedAction(true);
-        setArchivedState(true);
       }
     } catch (error: any) {
       toast.error(error?.response?.data?.message);
@@ -554,7 +565,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
       setLoading(false);
     }
   };
-  const handleUnarchiveChat = (id: string) => {};
+
   const handleDeleteChat = async (id: string) => {
     setDeleteModal(false);
     setLoading(true);
@@ -908,64 +919,100 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                       </div>
                     </Fade>
                   ) : (
-                    <div className="w-full flex gap-y-2 items-start gap-x-2">
-                      <img
-                        src={AI_PHOTO}
-                        className="lg:w-[30px] lg:h-[30px] w-[25px] h-[25px] "
-                        alt=""
-                      />
-                      <div
-                        className="flex flex-col items-start gap-y-1 -mt-3"
-                        onMouseEnter={() => setHoveredMessage(mess?.id)}
-                        onMouseLeave={() => setHoveredMessage(null)}
-                      >
-                        <div className="px-4 py-2  rounded-xl lg:max-w-full md:max-w-lg sm:max-w-sm max-w-full">
-                          {mess.isLoading ? (
-                            <PulseLoader
-                              size={14}
-                              color="#767676"
-                              className="mt-2"
-                            />
-                          ) : (
-                            <span className="lg:text-base md:text-sm text-xs font-normal text-[#6E6E6E] break-words">
-                              {colorizeText(mess?.content)}
+                    <>
+                      {failedResponse ? (
+                        <div className="w-full flex items-start gap-x-3 relative gap-y-2 mt-5">
+                          {/* <img src={AI_PHOTO} className="w-[30px] h-[30px] " alt="" /> */}
+                          <FaCircleInfo
+                            className="w-[30px] h-[30px]"
+                            color="red"
+                          />
+                          <div className="px-4  rounded-xl h-full">
+                            <span className="text-[18px] font-normal text-red-500">
+                              {/* <PulseLoader size={isMobile ? 8 : 11} color="#767676" /> */}
+                              Failed to generate respone
                             </span>
-                          )}
+                          </div>
                         </div>
-                        <div
-                          className={`flex items-center gap-x-2 ml-3 ${
-                            hoveredMessage === mess?.id
-                              ? "opacity-100"
-                              : "opacity-0"
-                          } text-white/30`}
-                        >
-                          <Tooltip title="Read aloud">
-                            <span
-                              className={`flex items-center justify-center ${
-                                darkmode
-                                  ? "hover:bg-white/10"
-                                  : "text-gray-500 hover:bg-gray-200"
-                              } w-[30px] h-[30px] rounded-md`}
-                              onClick={() => readTextAloud(mess?.content)}
+                      ) : (
+                        <div className="w-full flex gap-y-2 items-start gap-x-2">
+                          <img
+                            src={AI_PHOTO}
+                            className="lg:w-[30px] lg:h-[30px] w-[25px] h-[25px] "
+                            alt=""
+                          />
+                          <div
+                            className="flex flex-col items-start gap-y-1 -mt-3"
+                            onMouseEnter={() => setHoveredMessage(mess?.id)}
+                            onMouseLeave={() => setHoveredMessage(null)}
+                          >
+                            <div className="px-4 py-2  rounded-xl lg:max-w-full md:max-w-lg sm:max-w-sm max-w-full">
+                              {mess.isLoading ? (
+                                <PulseLoader
+                                  size={14}
+                                  color="#767676"
+                                  className="mt-2"
+                                />
+                              ) : (
+                                <span className="lg:text-base md:text-sm text-xs font-normal text-[#6E6E6E] break-words">
+                                  {colorizeText(mess?.content)}
+                                </span>
+                              )}
+                            </div>
+                            <div
+                              className={`flex items-center gap-x-2 ml-3 ${
+                                hoveredMessage === mess?.id
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              } text-white/30`}
                             >
-                              <FaVolumeUp className="cursor-pointer" />
-                            </span>
-                          </Tooltip>
-                          <Tooltip title="Copy">
-                            <span
-                              className={`flex items-center justify-center ${
-                                darkmode
-                                  ? "hover:bg-white/10"
-                                  : "text-gray-500 hover:bg-gray-200"
-                              } w-[30px] h-[30px] rounded-md`}
-                              onClick={() => handleCopy(mess?.content)}
-                            >
-                              <FaCopy className="cursor-pointer" />
-                            </span>
-                          </Tooltip>
+                              {readerSpeaking ? (
+                                <Tooltip title="Stop">
+                                  <span
+                                    className={`flex items-center justify-center ${
+                                      darkmode
+                                        ? "hover:bg-white/10"
+                                        : "text-gray-500 hover:bg-gray-200"
+                                    } w-[30px] h-[30px] rounded-md`}
+                                    onClick={() => {
+                                      window.speechSynthesis.cancel();
+                                      setReaderSpeaking(false);
+                                    }}
+                                  >
+                                    <FaStop className="cursor-pointer" />
+                                  </span>
+                                </Tooltip>
+                              ) : (
+                                <Tooltip title="Read aloud">
+                                  <span
+                                    className={`flex items-center justify-center ${
+                                      darkmode
+                                        ? "hover:bg-white/10"
+                                        : "text-gray-500 hover:bg-gray-200"
+                                    } w-[30px] h-[30px] rounded-md`}
+                                    onClick={() => readTextAloud(mess?.content)}
+                                  >
+                                    <FaVolumeUp className="cursor-pointer" />
+                                  </span>
+                                </Tooltip>
+                              )}
+                              <Tooltip title="Copy">
+                                <span
+                                  className={`flex items-center justify-center ${
+                                    darkmode
+                                      ? "hover:bg-white/10"
+                                      : "text-gray-500 hover:bg-gray-200"
+                                  } w-[30px] h-[30px] rounded-md`}
+                                  onClick={() => handleCopy(mess?.content)}
+                                >
+                                  <FaCopy className="cursor-pointer" />
+                                </span>
+                              </Tooltip>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                      )}
+                    </>
                   )}
                 </div>
               )
@@ -980,6 +1027,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
               </div>
             </div>
           )} */}
+
           <div ref={messagesEndRef} />
         </div>
       )}
@@ -1320,11 +1368,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
           className="fixed bottom-4 right-4 z-50 bg-gray-900 text-white p-4 rounded-lg shadow-lg max-w-xs w-full flex justify-between items-center"
         >
           <p className="text-sm text-red-400">
-            <span className="font-semibold">
-              {markAsFavoriteState
-                ? "Chat marked as favorite"
-                : "Chat removed from favorite"}
-            </span>
+            <span className="font-semibold">Chat marked as favorite</span>
           </p>
           <button
             onClick={() => {
@@ -1346,9 +1390,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
           className="fixed bottom-4 right-4 z-50 bg-gray-900 text-white p-4 rounded-lg shadow-lg max-w-xs w-full flex justify-between items-center"
         >
           <p className="text-sm text-red-400">
-            <span className="font-semibold">
-              {archivedState ? "Chat archived" : "Unarchived chat"}
-            </span>
+            <span className="font-semibold">Chat archived</span>
           </p>
           <button
             onClick={() => {
@@ -1399,7 +1441,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
         <div className="flex flex-col gap-y-4 py-7">
           <span
             className={`text-lg font-semibold border-b text-left pb-3 pl-5 ${
-              darkmode ? "text-gray-400 border-gray-700" : "text-[#c4c4c4]"
+              darkmode ? "text-gray-400 border-gray-700" : "text-[#141718]"
             }`}
           >
             Delete Chat?
@@ -1407,7 +1449,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
           <div className="flex flex-col items-end justify-start px-5">
             <span
               className={`w-full text-start text-[16px] font-medium ${
-                darkmode ? "text-gray-400" : "text-[#c4c4c4]"
+                darkmode ? "text-gray-400" : "text-[#141718]"
               }`}
             >
               This action is not{" "}

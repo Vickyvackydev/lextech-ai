@@ -95,13 +95,16 @@ import {
   UpdatePasswordApi,
 } from "../../../services/auth/auth.service";
 import {
+  getAllChats,
   getArchivedChats,
   getChats,
   getFavoritesChats,
+  RemoveFromFavorite,
+  UnArchiveChat,
 } from "../../../services/chat/chat.service";
 import toast from "react-hot-toast";
 import { FaTimes, FaWindows } from "react-icons/fa";
-import { FadeLoader } from "react-spinners";
+import { FadeLoader, PulseLoader } from "react-spinners";
 
 interface SidebarProps {
   open: boolean;
@@ -110,19 +113,30 @@ interface SidebarProps {
 }
 const label = { inputProps: { "aria-label": "Checkbox demo" } };
 const Sidebar = (props: SidebarProps) => {
-  const { onClose } = props;
   const user = useAppSelector(selectUser);
   const [tab, setTab] = useState("edit-profile");
-  const [archivedChatsModal, setArchivedChatsModal] = useState(true);
+  const [archivedChatsModal, setArchivedChatsModal] = useState(false);
+  const [favoriteChatsModal, setFavoriteChatsModal] = useState(false);
   const dispatch = useAppDispatch();
   const settings = useAppSelector(showSettings);
   const open = useAppSelector(SelectOpenState);
+  const [loading, setLoading] = useState(false);
   const modalIsOpen = useAppSelector(openModal);
   const [lists, setLists] = useState(false);
-  const { data: favorites } = useQuery("favorites", getFavoritesChats);
-  const { data: archived } = useQuery("favorites", getArchivedChats);
+  const [selectedId, setSelectedId] = useState("");
+  const [removedFromFavorite, setRemovedFromFavorite] = useState(false);
+  const [removedFromArchived, setRemovedFromArchived] = useState(false);
+  const { data: favorites, refetch: favoritesRefetch } = useQuery(
+    "favorites",
+    getFavoritesChats
+  );
+  const { data: archived, refetch: archivedRefetch } = useQuery(
+    "archived",
+    getArchivedChats
+  );
   const { data: sessions } = useQuery("sessions", SessionApi);
 
+  console.log(archived);
   const switchTabs = () => {
     switch (tab) {
       case "edit-profile":
@@ -146,7 +160,7 @@ const Sidebar = (props: SidebarProps) => {
   const username = useAppSelector(selectUserName);
   const userImg = useAppSelector(selectProfile);
 
-  const { data: ChatHistory, isLoading } = useQuery("chats", getChats);
+  const { data: ChatHistory, isLoading } = useQuery("chats", getAllChats);
 
   // const {
   //   data: chatHistory,
@@ -171,6 +185,36 @@ const Sidebar = (props: SidebarProps) => {
   // }, [isLoadingMore, mutate]);
 
   // const groupMessages = groupMessagesByDate(chatHistory);
+  const handleUnarchiveChat = async (id: string) => {
+    setSelectedId(id);
+    setLoading(true);
+    try {
+      const response = await UnArchiveChat(id);
+      if (response) {
+        archivedRefetch();
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveChatAsFavorite = async (id: string) => {
+    setSelectedId(id);
+    setLoading(true);
+    try {
+      const response = await RemoveFromFavorite(id);
+      if (response) {
+        favoritesRefetch();
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const [search, setSearch] = useState("");
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
 
@@ -388,7 +432,13 @@ const Sidebar = (props: SidebarProps) => {
                       <span className="text-[#6C7275]">48</span>
                     </div>
                   </li> */}
-                  <li className="flex pl-2 items-center justify-between gap-x-5">
+                  <li
+                    className="flex pl-2 items-center justify-between gap-x-5"
+                    onClick={() => {
+                      setFavoriteChatsModal(true);
+                      dispatch(setOpen(!open));
+                    }}
+                  >
                     <div
                       className={`flex  items-center $ justify-start gap-x-5`}
                     >
@@ -411,7 +461,13 @@ const Sidebar = (props: SidebarProps) => {
                       </span>
                     </div>
                   </li>
-                  <li className="flex pl-2 items-center justify-between gap-x-5">
+                  <li
+                    className="flex pl-2 items-center justify-between gap-x-5"
+                    onClick={() => {
+                      setArchivedChatsModal(true);
+                      dispatch(setOpen(!open));
+                    }}
+                  >
                     <div className={`flex  items-centerjustify-start gap-x-5`}>
                       <>
                         <img
@@ -686,7 +742,10 @@ const Sidebar = (props: SidebarProps) => {
                         </div>
                       )}
                     </li> */}
-                    <li className="flex pl-2 items-center justify-between gap-x-5">
+                    <li
+                      className="flex pl-2 items-center justify-between gap-x-5"
+                      onClick={() => setFavoriteChatsModal(true)}
+                    >
                       <div
                         className={`flex  items-center ${
                           open && "justify-center"
@@ -720,7 +779,10 @@ const Sidebar = (props: SidebarProps) => {
                         </div>
                       )}
                     </li>
-                    <li className="flex pl-2 items-center justify-between gap-x-5">
+                    <li
+                      className="flex pl-2 items-center justify-between gap-x-5"
+                      onClick={() => setArchivedChatsModal(true)}
+                    >
                       <div
                         className={`flex  items-center ${
                           open && "justify-center"
@@ -839,7 +901,7 @@ const Sidebar = (props: SidebarProps) => {
         edges="rounded-2xl"
         maxWidth="w-[900px]"
       >
-        <div className="py-6 bg-gray-900 rounded-2xl text-white">
+        <div className="py-6 rounded-2xl text-white">
           {/* Modal Header */}
           <div className="flex justify-between items-center pb-4 border-b px-6 border-gray-700">
             <h2 className="text-lg font-semibold">Archived Chats</h2>
@@ -866,95 +928,167 @@ const Sidebar = (props: SidebarProps) => {
           </div>
 
           <div className="mt-4">
-            <div className="grid grid-cols-3 px-6 items-center text-start px-6 gap-4 text-sm text-gray-400 font-medium border-b border-gray-700 pb-2">
+            <div className="grid grid-cols-3  items-center text-start px-6 gap-4 text-sm text-gray-400 font-medium border-b border-gray-700 pb-2">
               <span>Name</span>
               <span>Date created</span>
               <span className="text-right">Actions</span>
             </div>
 
             <div className="space-y-4 mt-4">
-              <div className="grid grid-cols-3 px-6 items-center gap-4 text-sm text-start">
-                <span className="truncate text-white">Redux Chat Bug Fix</span>
-                <span className="text-gray-400">January 10, 2025</span>
-                <div className="flex justify-end space-x-4">
-                  <button
-                    className="text-gray-400 hover:text-white"
-                    title="Unarchive conversation"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M3 3h18v18H3V3zm16 16V5H5v14h14z" />
+              {archived?.length > 0 &&
+                archived !== undefined &&
+                archived?.map(
+                  (item: { id: string; title: string; created_at: string }) => (
+                    <div className="grid grid-cols-3 px-6 items-center gap-4 text-sm text-start">
+                      <span className="truncate text-white">{item?.title}</span>
+                      <span className="text-gray-400">
+                        {moment(item?.created_at).format("MMM D, YYYY")}
+                      </span>
+                      <div className="flex justify-end space-x-4">
+                        <button
+                          type="button"
+                          onClick={() => handleUnarchiveChat(item.id)}
+                          className="text-gray-400 hover:text-white"
+                          title="Unarchive conversation"
+                        >
+                          {loading && selectedId === item.id ? (
+                            <PulseLoader size={15} />
+                          ) : (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5"
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                            >
+                              <path d="M3 3h18v18H3V3zm16 16V5H5v14h14z" />
 
-                      <path
-                        d="M12 16V9m-3 3 3-3 3 3"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        fill="none"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    className="text-red-500 hover:text-red-700"
-                    title="Delete conversation"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M9 3h6a1 1 0 011 1v1h3a1 1 0 110 2H5a1 1 0 010-2h3V4a1 1 0 011-1zm-3 5h12v13a2 2 0 01-2 2H8a2 2 0 01-2-2V8z" />
+                              <path
+                                d="M12 16V9m-3 3 3-3 3 3"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                fill="none"
+                              />
+                            </svg>
+                          )}
+                        </button>
+                        {/* <button
+                        className="text-red-500 hover:text-red-700"
+                        title="Delete conversation"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <path d="M9 3h6a1 1 0 011 1v1h3a1 1 0 110 2H5a1 1 0 010-2h3V4a1 1 0 011-1zm-3 5h12v13a2 2 0 01-2 2H8a2 2 0 01-2-2V8z" />
 
-                      <path d="M10 10v8a1 1 0 102 0v-8a1 1 0 10-2 0zm4 0v8a1 1 0 102 0v-8a1 1 0 10-2 0zM8 10v8a1 1 0 102 0v-8a1 1 0 10-2 0z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 px-6 items-center gap-4 text-sm text-start">
-                <span className="truncate text-white">Redux Chat Bug Fix</span>
-                <span className="text-gray-400">January 10, 2025</span>
-                <div className="flex justify-end space-x-4">
-                  <button
-                    className="text-gray-400 hover:text-white"
-                    title="Unarchive conversation"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M3 3h18v18H3V3zm16 16V5H5v14h14z" />
+                          <path d="M10 10v8a1 1 0 102 0v-8a1 1 0 10-2 0zm4 0v8a1 1 0 102 0v-8a1 1 0 10-2 0zM8 10v8a1 1 0 102 0v-8a1 1 0 10-2 0z" />
+                        </svg>
+                      </button> */}
+                      </div>
+                    </div>
+                  )
+                )}
+            </div>
+          </div>
+        </div>
+      </ModalV2>
+      <ModalV2
+        isOpen={favoriteChatsModal}
+        isClose={() => setFavoriteChatsModal(false)}
+        edges="rounded-2xl"
+        maxWidth="w-[900px]"
+      >
+        <div className="py-6 bg-gray-900 rounded-2xl text-white">
+          {/* Modal Header */}
+          <div className="flex justify-between items-center pb-4 border-b px-6 border-gray-700">
+            <h2 className="text-lg font-semibold">Favorite Chats</h2>
+            <button
+              className={` w-[35px] h-[35px] rounded-full flex justify-center items-center ${
+                darkmode ? "hover:bg-white/20" : "hover:bg-gray-400"
+              }`}
+              onClick={() => setFavoriteChatsModal(false)}
+            >
+              {/* <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 9a1 1 0 01-.707-1.707l6-6a1 1 0 011.414 1.414L11.414 9l5.293 5.293a1 1 0 01-1.414 1.414l-6-6A1 1 0 0110 9z"
+                  clipRule="evenodd"
+                />
+              </svg> */}
+              <FaTimes color="white" />
+            </button>
+          </div>
 
-                      <path
-                        d="M12 16V9m-3 3 3-3 3 3"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        fill="none"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    className="text-red-500 hover:text-red-700"
-                    title="Delete conversation"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M9 3h6a1 1 0 011 1v1h3a1 1 0 110 2H5a1 1 0 010-2h3V4a1 1 0 011-1zm-3 5h12v13a2 2 0 01-2 2H8a2 2 0 01-2-2V8z" />
+          <div className="mt-4">
+            <div className="grid grid-cols-3 items-center text-start px-6 gap-4 text-sm text-gray-400 font-medium border-b border-gray-700 pb-2">
+              <span>Name</span>
+              <span>Date created</span>
+              <span className="text-right">Actions</span>
+            </div>
 
-                      <path d="M10 10v8a1 1 0 102 0v-8a1 1 0 10-2 0zm4 0v8a1 1 0 102 0v-8a1 1 0 10-2 0zM8 10v8a1 1 0 102 0v-8a1 1 0 10-2 0z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
+            <div className="space-y-4 mt-4">
+              {favorites?.length > 0 &&
+                favorites !== undefined &&
+                favorites?.map(
+                  (item: { id: string; title: string; created_at: string }) => (
+                    <div className="grid grid-cols-3 px-6 items-center gap-4 text-sm text-start">
+                      <span className="truncate text-white">
+                        Redux Chat Bug Fix
+                      </span>
+                      <span className="text-gray-400">January 10, 2025</span>
+                      <div className="flex justify-end space-x-4">
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveChatAsFavorite(item.id)}
+                          className="text-gray-400 hover:text-white"
+                          title="Unarchive conversation"
+                        >
+                          {loading && selectedId === item.id ? (
+                            <PulseLoader size={15} />
+                          ) : (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5"
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                            >
+                              <path d="M3 3h18v18H3V3zm16 16V5H5v14h14z" />
+
+                              <path
+                                d="M12 16V9m-3 3 3-3 3 3"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                fill="none"
+                              />
+                            </svg>
+                          )}
+                        </button>
+                        {/* <button
+                      className="text-red-500 hover:text-red-700"
+                      title="Delete conversation"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M9 3h6a1 1 0 011 1v1h3a1 1 0 110 2H5a1 1 0 010-2h3V4a1 1 0 011-1zm-3 5h12v13a2 2 0 01-2 2H8a2 2 0 01-2-2V8z" />
+  
+                        <path d="M10 10v8a1 1 0 102 0v-8a1 1 0 10-2 0zm4 0v8a1 1 0 102 0v-8a1 1 0 10-2 0zM8 10v8a1 1 0 102 0v-8a1 1 0 10-2 0z" />
+                      </svg>
+                    </button> */}
+                      </div>
+                    </div>
+                  )
+                )}
             </div>
           </div>
         </div>
@@ -2097,7 +2231,7 @@ export const DeleteAccount = () => {
           disabled={password === "" || deleting}
           title="Delete account"
           btnStyle={` ${
-            password === "" || deleting ? "opacity-30" : "bg-opacity-50"
+            password === "" || deleting ? "bg-opacity-30" : "bg-opacity-100"
           } rounded-lg w-full h-[62px] flex items-center justify-center  bg-[#D84210]`}
           handleClick={() => setDeleteModal(true)}
           textStyle="text-white font-semibold"
@@ -2119,7 +2253,7 @@ export const DeleteAccount = () => {
         <div className="flex flex-col gap-y-4 py-7">
           <span
             className={`text-lg font-semibold border-b text-left pb-3 pl-5 ${
-              darkmode ? "text-gray-400 border-gray-700" : "text-[#c4c4c4]"
+              darkmode ? "text-gray-400 border-gray-700" : "text-[#141718]"
             }`}
           >
             Delete Account?
@@ -2127,15 +2261,13 @@ export const DeleteAccount = () => {
           <div className="flex flex-col items-end justify-start px-5">
             <span
               className={`w-full text-start text-[16px] font-medium ${
-                darkmode ? "text-gray-400" : "text-[#c4c4c4]"
+                darkmode ? "text-gray-400" : "text-[#141718]"
               }`}
             >
               Are you sure you want to delete this account?
             </span>
             <span
-              className={`w-full text-start text-sm text-red-500 font-medium ${
-                darkmode ? "text-gray-400" : "text-[#c4c4c4]"
-              }`}
+              className={`w-full text-start text-sm text-red-500 font-medium `}
             >
               Note: You will loose all your details and chats!
             </span>

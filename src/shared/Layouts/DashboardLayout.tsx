@@ -94,9 +94,11 @@ export default function DashboardLayout({
       </div>
 
       <SidebarV2
-        v2Open={sidebarV2Visible}
-        v2OnClose={() => setSidebarV2Visible(false)}
-        setV2Open={setSidebarV2Visible}
+        {...{
+          v2Open: sidebarV2Visible,
+          v2OnClose: () => setSidebarV2Visible(false),
+          setV2Open: setSidebarV2Visible,
+        }}
       />
     </div>
   );

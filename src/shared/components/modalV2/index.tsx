@@ -12,6 +12,7 @@ import React, { Fragment } from "react";
 import { useAppSelector } from "../../../hooks";
 import { selectDarkmode } from "../../../states/slices/globalReducer";
 import { CLOSE_BTN } from "../../../utils-func/image_exports";
+import { FaTimes } from "react-icons/fa";
 
 type ModalProps = {
   // state modal params types
@@ -69,15 +70,13 @@ const ModalV2 = ({
               >
                 {isBTnTrue === true ? (
                   <button
-                    className={`  hover:scale-90 transition-all `}
+                    className={`  hover:scale-90  ${
+                      darkmode ? "hover:bg-white/20" : "bg-gray-300"
+                    } transition-all flex items-center justify-center w-[40px] h-[40px] rounded-full`}
                     onClick={isClose}
                     type="button"
                   >
-                    <img
-                      src={CLOSE_BTN}
-                      className="w-[44.24px] h-[44.24px]"
-                      alt=""
-                    />
+                    <FaTimes size={20} color={darkmode ? "white" : "black"} />
                   </button>
                 ) : null}
                 <div className=" w-full mt-2 max-h-[500px] overflow-y-scroll overscroll-x-none ">

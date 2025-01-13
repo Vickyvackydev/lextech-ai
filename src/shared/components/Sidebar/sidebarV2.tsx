@@ -1,7 +1,3 @@
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
-/* eslint-disable react/jsx-no-useless-fragment */
-
 import {
   MenuButton,
   Menu,
@@ -10,16 +6,11 @@ import {
   Transition,
 } from "@headlessui/react";
 import { useState, useRef } from "react";
-
 import { FaSignOutAlt } from "react-icons/fa";
-
 import Tooltip from "@mui/material/Tooltip";
-
 import ButtonV2 from "../buttonV2";
 import { Fade } from "react-awesome-reveal";
-
 import { Skeleton } from "@mui/material";
-
 import { FaUser } from "react-icons/fa6";
 import { useQuery } from "react-query";
 import { useAppDispatch, useAppSelector, useMediaQuery } from "../../../hooks";
@@ -42,6 +33,7 @@ import {
 } from "../../../utils-func/image_exports";
 import { formatDate, formatTimeElapsed } from "../../../utils-func/functions";
 import { selectProfile, selectUser } from "../../../states/slices/authReducer";
+import { FadeLoader } from "react-spinners";
 
 interface SidebarV2Props {
   v2Open: boolean;
@@ -54,12 +46,23 @@ const SidebarV2 = (props: SidebarV2Props) => {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectProfile);
   const [loading, setLoading] = useState(false);
-
+  const [page, setPage] = useState(1);
   const location = useLocation();
   const ChatId = location.pathname.split("/").pop();
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   const [selectedIds, setSelectedIds] = useState<any>([]);
-  const { data: ChatHistory, isLoading } = useQuery("chats", getChats);
+  const { data: ChatHistory, isLoading } = useQuery(["chats", page], () =>
+    getChats(page)
+  );
+
+  const handlePageNext = () => {
+    setLoading(isLoading);
+    setPage(page + 1);
+  };
+  const handlePagePrev = () => {
+    setLoading(isLoading);
+    setPage(page - 1);
+  };
   const handleChatClick = (
     id: string,
     messages: any[],
@@ -80,43 +83,6 @@ const SidebarV2 = (props: SidebarV2Props) => {
 
   console.log(ChatHistory);
 
-  // const {
-  //   data: chatHistory,
-  //   isLoading,
-  //   mutate,
-  // } = useSWR(`/api/history`, fetcher, {
-  //   revalidateOnFocus: false,
-  //   revalidateOnReconnect: false,
-  //   fallbackData: [],
-  //   onSuccess: (newData) => {
-  //     if (!newData || newData.length === 0) {
-  //       setHasMore(false);
-  //       setIsLoadingMore(false);
-  //     }
-  //     setIsLoadingMore(false);
-  //   },
-  // });
-  // useEffect(() => {
-  //   if (isLoadingMore) {
-  //     mutate();
-  //   }
-  // }, [isLoadingMore, mutate]);
-
-  // const handleDeleteChat = async (chatIds: string[], e: React.MouseEvent) => {
-  //   e.preventDefault();
-  //   e.stopPropagation();
-
-  //   try {
-  //     await deleteChats(chatIds);
-  //     // await mutate(); // Refresh the chat list
-  //     setLoading(false);
-  //     navigate("/");
-  //   } catch (error) {
-  //     console.error("Error deleting chat:", error);
-  //     toast.error("error deleting chat");
-  //   }
-  // };
-
   const isMobileView = useMediaQuery("(max-width: 640px)");
   const isTabletView = useMediaQuery("(max-width: 840px)");
   const darkmode = useAppSelector(selectDarkmode);
@@ -127,7 +93,7 @@ const SidebarV2 = (props: SidebarV2Props) => {
       {isMobileView || isTabletView ? (
         <Transition
           as="div"
-          className="fixed z-30 h-full w-56 flex-none bg-brand-light lg:static"
+          className="fixed z-30 top-0 h-full w-80 flex-none bg-brand-light lg:static"
           enter="transition-all ease-in duration-300"
           enterFrom="transform -translate-x-full"
           enterTo="transform -translate-x-0"
@@ -138,7 +104,7 @@ const SidebarV2 = (props: SidebarV2Props) => {
         >
           {/* mobile screen section */}
           <div
-            className={`flex h-screen z-20 flex-col py-7 w-[650px]  ${
+            className={`flex h-screen z-20 flex-col py-7   ${
               darkmode ? "bg-[#232627]" : "bg-[#FEFEFE]"
             }`}
             style={{ boxShadow: "inset 0 4px 6px rgba(0, 0, 0, 0.1)" }}
@@ -240,6 +206,14 @@ const SidebarV2 = (props: SidebarV2Props) => {
                     {ChatHistory?.data?.length}/{ChatHistory?.meta?.total}
                   </div>
                 </div>
+                {/* {ChatHistory?.data?.length > 0 &&
+                  (loading ? (
+                    <FadeLoader />
+                  ) : (
+                    <button type="button" onClick={handlePageNext}>
+                      See more
+                    </button>
+                  ))} */}
               </div>
               <Fade direction="up" duration={1000}>
                 <div className="mt-16 flex flex-col gap-y-3 h-[400px] max-h-[400px] overflow-y-scroll">
@@ -451,7 +425,7 @@ const SidebarV2 = (props: SidebarV2Props) => {
                       : "bg-[#E8ECEF] border-0 text-[#6C7275]"
                   }  flex items-center shadow-md justify-center text-xs font-medium `}
                 >
-                  {ChatHistory?.data?.length}/{ChatHistory?.meta?.total}
+                  {ChatHistory?.meta?.to ?? 0}/{ChatHistory?.meta?.total}
                 </div>
               </div>
             </div>
@@ -527,7 +501,7 @@ const SidebarV2 = (props: SidebarV2Props) => {
                   )
                 ) : isLoading ? (
                   <>
-                    <div className="w-[80%]">
+                    {/* <div className="w-[80%]">
                       <Skeleton
                         className="w-full mb-4"
                         height={20}
@@ -550,6 +524,9 @@ const SidebarV2 = (props: SidebarV2Props) => {
                         height={20}
                         variant="rectangular"
                       />
+                    </div> */}
+                    <div className="flex items-center justify-center">
+                      <FadeLoader color="#6C7275BF" />
                     </div>
                   </>
                 ) : (
@@ -557,6 +534,24 @@ const SidebarV2 = (props: SidebarV2Props) => {
                     No recents chats
                   </div>
                 )}
+                {ChatHistory?.data?.length > 10 &&
+                  (loading ? (
+                    <FadeLoader />
+                  ) : (
+                    <button
+                      type="button"
+                      className="text-sm rounded-2xl hover:bg-gray-300 border border-gray-200 w-fit py-2 px-2 flex justify-center items-center self-center"
+                      onClick={() => {
+                        ChatHistory?.meta?.to === ChatHistory?.meta?.total
+                          ? handlePagePrev()
+                          : handlePageNext();
+                      }}
+                    >
+                      {ChatHistory?.meta?.to === ChatHistory?.meta?.total
+                        ? "See less"
+                        : "See more"}
+                    </button>
+                  ))}
               </div>
             </Fade>
           </div>

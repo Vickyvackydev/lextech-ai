@@ -88,7 +88,7 @@ export default function DashboardLayout({
       <div
         className={`[@media(max-width:767px)]:scrollbar-hide h-screen overflow-auto ${
           darkmode ? "bg-[#141718]" : "bg-[#fbfcfe] "
-        } lg:pb-20 lg:w-[2100px] md:w-full sm:w-full lg:mt-0 mt-10`}
+        } lg:pb-20 lg:w-[2100px] :w-full lg:mt-0 mt-10`}
       >
         {children}
       </div>

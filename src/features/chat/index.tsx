@@ -32,7 +32,9 @@ import { useQuery } from "react-query";
 import {
   archiveChat,
   deleteChat,
+  getArchivedChats,
   getChats,
+  getFavoritesChats,
   markChatAsFavorite,
   SendMessage,
 } from "../../services/chat/chat.service";
@@ -127,6 +129,14 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   const [deleteModal, setDeleteModal] = useState(false);
   const [readerSpeaking, setReaderSpeaking] = useState(false);
   const navigate = useNavigate();
+  const { data: favorites, refetch: favoritesRefetch } = useQuery(
+    "favorites",
+    getFavoritesChats
+  );
+  const { data: archived, refetch: archivedRefetch } = useQuery(
+    "archived",
+    getArchivedChats
+  );
 
   // console.log(chatMessages);
 
@@ -544,6 +554,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
         // setArchivedState(true);
 
         setMarkAsFavorite(true);
+        favoritesRefetch();
       }
     } catch (error: any) {
       toast.error(error?.response?.data?.message);
@@ -558,6 +569,9 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
       const response = await archiveChat(id);
       if (response) {
         setArchivedAction(true);
+        chatHistoryRefetch();
+        archivedRefetch();
+        navigate("/");
       }
     } catch (error: any) {
       toast.error(error?.response?.data?.message);

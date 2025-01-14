@@ -54,6 +54,9 @@ const SidebarV2 = (props: SidebarV2Props) => {
   const { data: ChatHistory, isLoading } = useQuery(["chats", page], () =>
     getChats(page)
   );
+  const filterUnarchivedChat = ChatHistory?.data?.filter(
+    (item: { is_archived: boolean }) => item.is_archived === false
+  );
 
   const handlePageNext = () => {
     setLoading(isLoading);
@@ -203,7 +206,7 @@ const SidebarV2 = (props: SidebarV2Props) => {
                         : "bg-[#E8ECEF] border-0 text-[#6C7275]"
                     }  flex items-center shadow-md justify-center text-xs font-medium `}
                   >
-                    {ChatHistory?.data?.length}/{ChatHistory?.meta?.total}
+                    {filterUnarchivedChat?.length}/{ChatHistory?.meta?.total}
                   </div>
                 </div>
                 {/* {ChatHistory?.data?.length > 0 &&
@@ -217,8 +220,8 @@ const SidebarV2 = (props: SidebarV2Props) => {
               </div>
               <Fade direction="up" duration={1000}>
                 <div className="mt-16 flex flex-col gap-y-3 h-[400px] max-h-[400px] overflow-y-scroll">
-                  {ChatHistory?.data?.length > 0 ? (
-                    ChatHistory?.data?.map(
+                  {filterUnarchivedChat?.length > 0 ? (
+                    filterUnarchivedChat?.map(
                       (item: {
                         id: string;
                         title: string;
@@ -425,14 +428,14 @@ const SidebarV2 = (props: SidebarV2Props) => {
                       : "bg-[#E8ECEF] border-0 text-[#6C7275]"
                   }  flex items-center shadow-md justify-center text-xs font-medium `}
                 >
-                  {ChatHistory?.meta?.to ?? 0}/{ChatHistory?.meta?.total}
+                  {ChatHistory?.meta?.to ?? 0}/{ChatHistory?.meta?.total ?? 0}
                 </div>
               </div>
             </div>
             <Fade direction="up" duration={1000}>
               <div className="mt-16 flex flex-col gap-y-3 h-[400px] max-h-[400px] overflow-y-scroll">
-                {ChatHistory?.data?.length > 0 ? (
-                  ChatHistory?.data?.map(
+                {filterUnarchivedChat?.length > 0 ? (
+                  filterUnarchivedChat?.map(
                     (item: {
                       id: string;
                       title: string;

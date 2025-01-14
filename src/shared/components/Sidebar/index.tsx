@@ -1,7 +1,3 @@
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
-/* eslint-disable react/jsx-no-useless-fragment */
-
 import { Transition } from "@headlessui/react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -124,8 +120,10 @@ const Sidebar = (props: SidebarProps) => {
   const modalIsOpen = useAppSelector(openModal);
   const [lists, setLists] = useState(false);
   const [selectedId, setSelectedId] = useState("");
-  const [removedFromFavorite, setRemovedFromFavorite] = useState(false);
-  const [removedFromArchived, setRemovedFromArchived] = useState(false);
+  const { data: chatMessages, refetch: chatHistoryRefetch } = useQuery(
+    ["chats", 1],
+    () => getChats(1)
+  );
   const { data: favorites, refetch: favoritesRefetch } = useQuery(
     "favorites",
     getFavoritesChats
@@ -162,29 +160,6 @@ const Sidebar = (props: SidebarProps) => {
 
   const { data: ChatHistory, isLoading } = useQuery("chats", getAllChats);
 
-  // const {
-  //   data: chatHistory,
-  //   isLoading,
-  //   mutate,
-  // } = useSWR(`/api/history`, fetcher, {
-  //   revalidateOnFocus: false,
-  //   revalidateOnReconnect: false,
-  //   fallbackData: [],
-  //   onSuccess: (newData) => {
-  //     if (!newData || newData.length === 0) {
-  //       setHasMore(false);
-  //       setIsLoadingMore(false);
-  //     }
-  //     setIsLoadingMore(false);
-  //   },
-  // });
-  // useEffect(() => {
-  //   if (isLoadingMore) {
-  //     mutate();
-  //   }
-  // }, [isLoadingMore, mutate]);
-
-  // const groupMessages = groupMessagesByDate(chatHistory);
   const handleUnarchiveChat = async (id: string) => {
     setSelectedId(id);
     setLoading(true);
@@ -192,6 +167,10 @@ const Sidebar = (props: SidebarProps) => {
       const response = await UnArchiveChat(id);
       if (response) {
         archivedRefetch();
+        chatHistoryRefetch();
+        if (archived?.length < 1) {
+          setArchivedChatsModal(false);
+        }
       }
     } catch (error: any) {
       toast.error(error?.response?.data?.message);
@@ -207,6 +186,9 @@ const Sidebar = (props: SidebarProps) => {
       const response = await RemoveFromFavorite(id);
       if (response) {
         favoritesRefetch();
+        if (favorites?.length < 1) {
+          setArchivedChatsModal(false);
+        }
       }
     } catch (error: any) {
       toast.error(error?.response?.data?.message);
@@ -952,7 +934,7 @@ const Sidebar = (props: SidebarProps) => {
                           title="Unarchive conversation"
                         >
                           {loading && selectedId === item.id ? (
-                            <PulseLoader size={15} />
+                            <PulseLoader size={12} color="red" />
                           ) : (
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -1039,19 +1021,19 @@ const Sidebar = (props: SidebarProps) => {
                 favorites?.map(
                   (item: { id: string; title: string; created_at: string }) => (
                     <div className="grid grid-cols-3 px-6 items-center gap-4 text-sm text-start">
-                      <span className="truncate text-white">
-                        Redux Chat Bug Fix
+                      <span className="truncate text-white">{item?.title}</span>
+                      <span className="text-gray-400">
+                        {moment(item?.created_at).format("MMM D, YYYY")}
                       </span>
-                      <span className="text-gray-400">January 10, 2025</span>
                       <div className="flex justify-end space-x-4">
                         <button
                           type="button"
                           onClick={() => handleRemoveChatAsFavorite(item.id)}
                           className="text-gray-400 hover:text-white"
-                          title="Unarchive conversation"
+                          title="Remove favorite"
                         >
                           {loading && selectedId === item.id ? (
-                            <PulseLoader size={15} />
+                            <PulseLoader size={12} color="red" />
                           ) : (
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -1059,13 +1041,21 @@ const Sidebar = (props: SidebarProps) => {
                               viewBox="0 0 24 24"
                               fill="currentColor"
                             >
-                              <path d="M3 3h18v18H3V3zm16 16V5H5v14h14z" />
-
                               <path
-                                d="M12 16V9m-3 3 3-3 3 3"
+                                d="M12.1 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6.5 3.5 5 5.5 5c1.54 0 3.04.99 3.57 2.36h.87C13.46 5.99 14.96 5 16.5 5 18.5 5 20 6.5 20 8.5c0 3.78-3.4 6.86-8.55 11.54l-1.35 1.31z"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                fill="none"
+                              />
+
+                              <line
+                                x1="8"
+                                y1="12"
+                                x2="16"
+                                y2="12"
                                 stroke="currentColor"
                                 strokeWidth="2"
-                                fill="none"
+                                strokeLinecap="round"
                               />
                             </svg>
                           )}

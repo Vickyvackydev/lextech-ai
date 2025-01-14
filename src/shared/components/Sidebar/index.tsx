@@ -980,7 +980,7 @@ const Sidebar = (props: SidebarProps) => {
         isOpen={favoriteChatsModal}
         isClose={() => setFavoriteChatsModal(false)}
         edges="rounded-2xl"
-        maxWidth="w-[900px]"
+        maxWidth="max-w-[900px] lg:w-[900px]"
       >
         <div className="py-6 bg-gray-900 rounded-2xl text-white">
           {/* Modal Header */}
@@ -1087,7 +1087,7 @@ const Sidebar = (props: SidebarProps) => {
       <ModalV2
         isOpen={modalIsOpen}
         isClose={() => dispatch(setSearcModal(false))}
-        maxWidth="w-[723px]"
+        maxWidth="max-w-[723px] md:w-[723px]"
         edges="rounded-2xl"
       >
         <div
@@ -1210,7 +1210,7 @@ const Sidebar = (props: SidebarProps) => {
         edges="rounded-2xl"
         maxWidth="w-[1003px]"
       >
-        <div className="p-7 w-full flex items-start gap-x-[5rem]">
+        <div className="p-7 w-full flex flex-col md:flex-row items-start gap-x-[5rem] gap-y-[5rem]">
           <div className="flex flex-col gap-y-4">
             <div className="w-full flex flex-col cursor-pointer">
               <div
@@ -1333,7 +1333,7 @@ const Sidebar = (props: SidebarProps) => {
                 </span>
               </div>
             </div>
-            <div className="w-full flex flex-col gap-y-3 mt-11 cursor-pointer">
+            <div className="w-full flex flex-col gap-y-3 md:mt-11 cursor-pointer">
               <div
                 onClick={() => setTab("delete-account")}
                 className={`flex items-center justify-start pl-4 gap-x-3 ${
@@ -1455,7 +1455,7 @@ export const EditProfile = () => {
           Edit Profile
         </span>
 
-        <div className="flex items-start gap-x-7">
+        <div className="flex items-start gap-x-7 flex-col md:flex-row gap-y-4  lg:gap-y-0">
           <div className="flex flex-col gap-y-2 items-start">
             <span
               className={`font-semibold text-[18px] ${

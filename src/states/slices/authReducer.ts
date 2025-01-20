@@ -48,6 +48,7 @@ export const AuthSlice = createSlice({
     reset: (state) => {
       state.user = null;
       state.token = null;
+      state.profileUpdate = null;
     },
   },
 });

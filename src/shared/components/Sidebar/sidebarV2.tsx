@@ -77,6 +77,7 @@ const SidebarV2 = (props: SidebarV2Props) => {
       id: mess.id,
       sender: mess.sender,
       content: mess.content,
+      file_path: mess.file_path || [],
       created_at: mess.created_at,
     }));
     dispatch(passPreviouseChats(selectedChatMessages));
@@ -247,7 +248,7 @@ const SidebarV2 = (props: SidebarV2Props) => {
                           <FaEllipsisV className="text-gray-500 hover:text-white" />
                         </div> */}
                           <div
-                            className={`flex relative flex-col items-end gap-y-0 cursor-pointer px-2 rounded-lg py-1 ${
+                            className={`flex relative w-full flex-col items-end gap-y-0 cursor-pointer px-2 rounded-lg py-1 ${
                               darkmode
                                 ? "hover:bg-white/20"
                                 : "hover:bg-[#F3F5F7]"
@@ -256,7 +257,7 @@ const SidebarV2 = (props: SidebarV2Props) => {
                               handleChatClick(item?.id, item?.messages, e)
                             }
                           >
-                            <div className="flex flex-col">
+                            <div className="flex flex-col w-full items-start">
                               <span
                                 className={`${
                                   darkmode ? "text-white" : "text-[#141718]"
@@ -461,7 +462,7 @@ const SidebarV2 = (props: SidebarV2Props) => {
                           <FaEllipsisV className="text-gray-500 hover:text-white" />
                         </div> */}
                         <div
-                          className={`flex relative flex-col items-end gap-y-0 cursor-pointer px-2 rounded-lg py-1 ${
+                          className={`flex relative w-full flex-col items-end gap-y-0 cursor-pointer px-2 rounded-lg py-1 ${
                             darkmode
                               ? "hover:bg-white/20"
                               : "hover:bg-[#F3F5F7]"
@@ -470,7 +471,7 @@ const SidebarV2 = (props: SidebarV2Props) => {
                             handleChatClick(item?.id, item?.messages, e)
                           }
                         >
-                          <div className="flex flex-col">
+                          <div className="flex flex-col items-start justify-start w-full">
                             <span
                               className={`${
                                 darkmode ? "text-white" : "text-[#141718]"

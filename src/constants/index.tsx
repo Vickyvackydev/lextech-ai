@@ -42,3 +42,26 @@ export const FAQs = [
       "Our platform offers comprehensive support, including online tutorials, customer support, and regular updates to ensure you get the most out of our tools and features. ",
   },
 ];
+
+export const swiperData = [
+  {
+    title: "Sign Up & Set Up",
+    para: "Quickly create your account and customize your profile to fit your court's needs",
+  },
+  {
+    title: "Upload Documents",
+    para: "Seamlessly upload case files and documents, organizing everything in one place.",
+  },
+  {
+    title: "Advanced Search",
+    para: "Use our powerful search engine to find relevant cases and references with ease.",
+  },
+  {
+    title: "Speech-to-Text & Live Captions",
+    para: "Dictate notes and receive real-time captions during proceedings for accurate documentation.",
+  },
+  {
+    title: "AI-Driven Insights",
+    para: "Receive intelligent suggestions and case analysis tailored to your needs.",
+  },
+];

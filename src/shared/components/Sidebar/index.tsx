@@ -726,7 +726,10 @@ const Sidebar = (props: SidebarProps) => {
                     </li> */}
                     <li
                       className="flex pl-2 items-center justify-between gap-x-5"
-                      onClick={() => setFavoriteChatsModal(true)}
+                      onClick={() => {
+                        if (favorites?.length === 0) return;
+                        setFavoriteChatsModal(true);
+                      }}
                     >
                       <div
                         className={`flex  items-center ${
@@ -763,7 +766,10 @@ const Sidebar = (props: SidebarProps) => {
                     </li>
                     <li
                       className="flex pl-2 items-center justify-between gap-x-5"
-                      onClick={() => setArchivedChatsModal(true)}
+                      onClick={() => {
+                        if (archived?.length === 0) return;
+                        setArchivedChatsModal(true);
+                      }}
                     >
                       <div
                         className={`flex  items-center ${

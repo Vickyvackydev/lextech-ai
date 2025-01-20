@@ -46,6 +46,13 @@ function Onboarding({
 
   const letters = text.split("");
 
+  const handleScrollToTours = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -146,16 +153,13 @@ function Onboarding({
             } lg:text-lg text-sm`}
             image={darkmode ? MAP_COLORED : MAP_CONNECTION}
             imageSize="w-[24px] h-[24px]"
-            handleClick={function (
-              event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-            ): void {
-              throw new Error("Function not implemented.");
-            }}
+            handleClick={() => handleScrollToTours("quick-action")}
           />
         </div>
       </Bounce>
       <Fade direction="down" duration={1000}>
         <div
+          id="quick-action"
           className={`w-full grid md:grid-cols-4 lg:grid-cols-4 sm:grid-cols-1 gap-y-3 items-center lg:mb-0 mb-[100px] ${
             open && !isMobile ? "  grid-cols-3 gap-y-2" : ""
           }   gap-x-2 mt-8 `}

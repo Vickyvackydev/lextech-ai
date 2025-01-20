@@ -12,8 +12,9 @@ import { RegisTerTypes } from "../../services/auth/type";
 import { RegisterApi } from "../../services/auth/auth.service";
 import { LOGO_V2 } from "../../utils-func/image_exports";
 import ButtonV2 from "../../shared/components/buttonV2";
-import { clearChats } from "../../states/slices/globalReducer";
+import { clearChats, setSettings } from "../../states/slices/globalReducer";
 import { useAppDispatch } from "../../hooks";
+import { reset } from "../../states/slices/authReducer";
 
 type RegisterFormValues = z.infer<typeof RegisterSchema>;
 
@@ -55,29 +56,6 @@ function Signup() {
     setValue(name as keyof RegisterFormValues, value, { shouldValidate: true });
   };
 
-  // const onSubmit = (data: z.infer<typeof RegisterSchema>) => {
-  //   startTransition(() => {
-  //     Register(data).then((data) => {
-  //       if (data.error) {
-  //         toast.error(data.error);
-  //         setLoading(false);
-  //         return;
-  //       }
-  //       toast.success(data.success!);
-  //       setFormData({
-  //         firstName: "",
-  //         lastName: "",
-  //         email: "",
-  //         password: "",
-  //         confirmPassword: "",
-  //       });
-  //       setIsChecked(false);
-
-  //       router.push("/sign-in");
-  //     });
-  //   });
-  // };
-
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -95,6 +73,7 @@ function Signup() {
         // toast.success(response?.data?.message, {
         //   duration: 10000,
         // });
+        dispatch(setSettings(false));
         dispatch(clearChats());
         navigate("/sign-in");
         setFormData({
@@ -104,6 +83,7 @@ function Signup() {
           password: "",
           confirmPassword: "",
         });
+        dispatch(reset());
         setIsChecked(false);
       }
     } catch (error: any) {

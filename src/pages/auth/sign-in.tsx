@@ -18,6 +18,7 @@ import {
 } from "../../states/slices/authReducer";
 import {
   clearChats,
+  setChatId,
   setMessage,
   setSettings,
 } from "../../states/slices/globalReducer";
@@ -68,6 +69,7 @@ function SignIn() {
       if (response) {
         dispatch(setSettings(false));
         dispatch(clearChats());
+        dispatch(setChatId(null));
         dispatch(setUser(response?.data));
         dispatch(setUserName(response?.data?.username));
         dispatch(setToken(response?.data?.token));

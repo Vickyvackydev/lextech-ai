@@ -37,6 +37,7 @@ import {
   getFavoritesChats,
   markChatAsFavorite,
   SendMessage,
+  uploadFileApi,
 } from "../../services/chat/chat.service";
 import {
   formatChatTime,
@@ -64,6 +65,7 @@ import {
 import {
   FaCopy,
   FaEllipsisH,
+  FaFileAlt,
   FaFilePdf,
   FaImage,
   FaStop,
@@ -77,7 +79,7 @@ import { Fade } from "react-awesome-reveal";
 import { FadeLoader, PulseLoader } from "react-spinners";
 import { Tooltip } from "@mui/material";
 import { PreviewAttachment } from "../../shared/components/custom/preview-attachment";
-import { StopIcon } from "../../shared/components/custom/icons";
+import { LoaderIcon, StopIcon } from "../../shared/components/custom/icons";
 import Onboarding from "../../shared/components/custom/onboarding";
 import { array, late } from "zod";
 import toast from "react-hot-toast";
@@ -85,6 +87,7 @@ import ModalV2 from "../../shared/components/modalV2";
 import { Navigate, useNavigate } from "react-router-dom";
 
 export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
+  const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
   const [attachments, setAttachments] = useState<any>([]);
   const username = useAppSelector(selectUserName);
   const user = useAppSelector(selectUser);
@@ -110,6 +113,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
   const chats = useAppSelector(selectChat);
   const [deleted, setDeleted] = useState(false);
   // const [chats, setChats] = useState<any[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [markAsFavorite, setMarkAsFavorite] = useState(false);
   const timeStamp = new Date().toISOString();
   const isFirstNewChat = chats?.length < 1;
@@ -137,8 +141,6 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
     "archived",
     getArchivedChats
   );
-
-  // console.log(chatMessages);
 
   const SpeechRecognition =
     (window as any).SpeechRecognition ||
@@ -199,78 +201,33 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
     setListening(false);
     recognition.stop();
   };
-  // const handleStartChat = async () => {
-  //   dispatch(setChats({ sender: "user", content: message }));
-  //   setMessage("");
-  //   dispatch(addLoadingState());
 
-  //   const formData = new FormData();
-  //   formData.append("message", message);
+  const handleUploadFile = async (files: File[]) => {
+    setUploading(true);
+    const formData = new FormData();
 
-  //   try {
-  //     const response = await SendMessage(formData);
-  //     if (response) {
-  //       toast.success("Message sent wait for response");
-  //       window.history.replaceState({}, "", `/chat/${response?.data?.id}`);
-  //       dispatch(setChatId(response?.data?.id));
-  //       setMessage("");
-  //       const latestAssistantMessage = response.data.messages.find(
-  //         (msg: { sender: string }) => msg.sender === "assistant"
-  //       );
-  //       if (latestAssistantMessage) {
-  //         dispatch(updateChat(latestAssistantMessage.content));
-  //       }
-  //     }
-  //   } catch (error: any) {
-  //     toast.error(error?.response?.data?.message);
-  //   } finally {
-  //     dispatch(setIsLoading(false));
-  //     setListening(false);
+    files.forEach((file) => {
+      // @ts-ignore
+      if (file) formData.append("file_path[]", file);
+    });
 
-  //     setMessage("");
-  //     setCaptions("");
-  //   }
-  // };
-
-  // const handleContinueChat = async () => {
-  //   dispatch(setChats({ sender: "user", content: message }));
-  //   setMessage("");
-  //   dispatch(addLoadingState());
-
-  //   const formData = new FormData();
-  //   formData.append("message", message);
-  //   if (chatId) {
-  //     formData.append("chat_id", chatId);
-  //   }
-  //   try {
-  //     const response = await SendMessage(formData);
-  //     if (response) {
-  //       toast.success("Message sent wait for response");
-  //       setMessage("");
-  //     }
-  //     // dispatch(setChats(response?.data?.messages));
-
-  //     // // dispatch(updateChat(response.data.messages[1].content));
-  //     const latestAssistantMessage = response.data.messages.find(
-  //       (msg: { sender: string }) => msg.sender === "assistant"
-  //     );
-  //     // toast.success(latestAssistantMessage.content);
-  //     if (latestAssistantMessage) {
-  //       dispatch(updateChat(latestAssistantMessage.content));
-  //     }
-  //   } catch (error: any) {
-  //     toast.error(error?.response?.data?.message);
-  //   } finally {
-  //     dispatch(setIsLoading(false));
-  //     setListening(false);
-
-  //     setMessage("");
-  //     setCaptions("");
-  //   }
-  // };
-
+    try {
+      const response = await uploadFileApi(formData);
+      if (response) {
+        toast.success("file uploaded successfully");
+        console.log(response);
+        const files = response?.data?.file_path;
+        setUploadedFiles(files);
+      }
+    } catch (error) {
+      toast.error("error uploading file");
+    } finally {
+      setUploading(false);
+    }
+  };
   const handleStartChat = async (mess: string) => {
     setFailedResponse(false);
+
     dispatch(
       setChats({
         sender: "user",
@@ -310,10 +267,19 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
     }
   };
 
+  console.log(uploadedFiles);
+
   const handleContinueChat = async (mess: string) => {
     setFailedResponse(false);
+    setSelectedFiles([]);
+
     dispatch(
-      setChats({ sender: "user", content: mess, created_at: timeStamp })
+      setChats({
+        sender: "user",
+        content: mess,
+        file_path: uploadedFiles && uploadedFiles,
+        created_at: timeStamp,
+      })
     );
     setMessage("");
     dispatch(addLoadingState());
@@ -322,6 +288,11 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
     formData.append("message", mess);
     if (chatId) {
       formData.append("chat_id", chatId);
+    }
+    if (uploadedFiles && uploadedFiles?.length > 0) {
+      uploadedFiles.forEach((files) => {
+        formData.append("file_path[]", files);
+      });
     }
 
     try {
@@ -344,6 +315,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
     } finally {
       dispatch(setIsLoading(false)); // Ensure loading state reset
       setMessage("");
+      setUploadedFiles([]);
     }
   };
 
@@ -404,68 +376,10 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
     }
   };
 
-  // const handleFileChange = useCallback(
-  //   async (event: ChangeEvent<HTMLInputElement>) => {
-  //     const files = Array.from(event.target.files || []);
-  //     setUploadQueue(files.map((file) => file.name));
-
-  //     try {
-  //       const uploadPromises = files.map((file) => uploadFile(file));
-  //       const uploadedAttachments = await Promise.all(uploadPromises);
-  //       const successfullyUploadedAttachments = uploadedAttachments.filter(
-  //         (attachment) => attachment !== undefined
-  //       );
-
-  //       setAttachments((currentAttachments: any) => [
-  //         ...currentAttachments,
-  //         ...successfullyUploadedAttachments,
-  //       ]);
-  //     } catch (error) {
-  //       console.error("Comprehensive upload error:", error);
-  //       toast.error("Failed to upload files");
-  //     } finally {
-  //       setUploadQueue([]);
-  //       // Reset the file input
-  //       if (fileInputRef.current) {
-  //         fileInputRef.current.value = "";
-  //       }
-  //     }
-  //   },
-  //   [setAttachments]
-  // );
-
-  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   if (!e.target.files) return;
-  //   const selectedFiles = Array.from(e.target.files);
-  //   const allowedFiles = [
-  //     "image/jpeg",
-  //     "image/png",
-  //     "image/jpg",
-  //     "application/pdf",
-  //   ];
-  //   const maxSize = 5 * 1024 * 1024;
-
-  //   const validFiles: File[] = [];
-  //   let error = "";
-  //   selectedFiles.forEach((file) => {
-  //     if (!allowedFiles.includes(file.type)) {
-  //       error = `${file.name} is not supported`;
-  //     } else if (file.size > maxSize) {
-  //       error = `${file.name} exceeds size limit`;
-  //     } else {
-  //       validFiles.push(file);
-  //     }
-
-  //     if (error) {
-  //       toast.error(error);
-  //     } else {
-  //       setFiles((prevFiles) => [...prevFiles, ...validFiles]);
-  //       toast.success("file uploaded");
-  //     }
-  //   });
-  // };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setUploading(true);
     const files = event.target.files;
 
     if (files) {
@@ -487,6 +401,9 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
       });
 
       setSelectedFiles(filesWithPreview);
+      if (filesWithPreview.length > 0) {
+        await handleUploadFile(selectedFiles);
+      }
     }
   };
 
@@ -532,19 +449,6 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
     return () => window.removeEventListener("keydown", handleControlKeyDown);
   }, []);
 
-  //   const handleShareChat = async (chatId: string) => {
-  //     const shareUrl = await shareChat(chatId, "whatsapp");
-  //     window.open(shareUrl, "_blank");
-  //   };
-
-  //   const removeAttachment = (attachmentToRemove: Attachment) => {
-  //     setAttachments((currentAttachments) =>
-  //       currentAttachments.filter(
-  //         (attachment) => attachment.url !== attachmentToRemove.url
-  //       )
-  //     );
-  //   };
-
   const handleMarkChatAsFavorite = async (id: string) => {
     setLoading(true);
     try {
@@ -572,6 +476,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
         chatHistoryRefetch();
         archivedRefetch();
         navigate("/");
+        dispatch(clearChats());
       }
     } catch (error: any) {
       toast.error(error?.response?.data?.message);
@@ -898,6 +803,7 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
             chats?.map(
               (mess: {
                 isLoading: boolean;
+                file_path: any;
                 sender: string;
                 content: string;
                 chat_id: string;
@@ -911,7 +817,31 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
                       duration={500}
                       className="w-full flex flex-col items-end justify-end gap-y-2"
                     >
-                      <div className="flex items-end flex-col gap-y-1">
+                      <div className="flex items-end flex-col gap-y-2">
+                        <div className="flex items-center -gap-x-1 ">
+                          {mess?.file_path?.length > 0 &&
+                            mess?.file_path !== undefined &&
+                            mess?.file_path?.map((file: any) => {
+                              const isImage = /\.(jpg|jpeg|png|gif)$/i.test(
+                                file
+                              );
+
+                              return isImage ? (
+                                <div className="lg:w-[200px] w-[75px] h-[75px] rounded-lg lg:h-[200px]  -mb-7">
+                                  <img
+                                    src={file}
+                                    className="w-full h-full rounded-2xl object-contain"
+                                    alt=""
+                                  />
+                                </div>
+                              ) : (
+                                <FaFilePdf
+                                  size={isMobile ? 75 : 150}
+                                  color="red"
+                                />
+                              );
+                            })}
+                        </div>
                         <div
                           className={`px-4 py-3 ${
                             darkmode
@@ -1183,31 +1113,24 @@ export function Chat({ isNewChat = false }: { isNewChat?: boolean }) {
               darkmode ? "border-[#343839]" : "border-[#E8ECEF]"
             }   rounded-2xl flex flex-col items-center h-auto mt-16 px-3`}
           >
-            <>
-              {(attachments.length > 0 || uploadQueue.length > 0) && (
-                <div className="flex flex-row gap-2">
-                  {attachments.map((attachment: any) => (
-                    <PreviewAttachment
-                      key={attachment.url}
-                      attachment={attachment}
-                      //   onRemove={() => removeAttachment(attachment)}
+            <div className="flex items-center gap-x-1">
+              {selectedFiles.length > 0 &&
+                selectedFiles.map((file) =>
+                  uploading ? (
+                    <div className="animate-spin p-7 absolute text-zinc-500">
+                      <LoaderIcon />
+                    </div>
+                  ) : file.preview ? (
+                    <img
+                      src={file.preview}
+                      className="w-[50px] max-h-[50px] rounded-lg object-contain"
+                      alt=""
                     />
-                  ))}
-
-                  {uploadQueue.map((filename) => (
-                    <PreviewAttachment
-                      key={filename}
-                      attachment={{
-                        url: "",
-                        name: filename,
-                        contentType: "",
-                      }}
-                      isUploading={true}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
+                  ) : (
+                    <FaFilePdf size={40} color="red" />
+                  )
+                )}
+            </div>
             <textarea
               name=""
               placeholder={placeHolder}

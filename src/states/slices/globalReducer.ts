@@ -95,6 +95,7 @@ export const GlobalSlice = createSlice({
     clearChats: (state) => {
       state.chats = [];
       state.messages = [];
+      state.chatId = null;
     },
     setChatId: (state, action) => {
       state.chatId = action.payload;

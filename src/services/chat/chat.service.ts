@@ -1,10 +1,18 @@
 import { API } from "../../config";
 
-export const SendMessage = async (text: FormData) => {
-  const response = await API.post("/chat", text, {
-    headers: { "Content-Type": "multipart/formdata" },
+export const SendMessage = async (data: any) => {
+  const response = await API.post("/chat", data, {
+    headers: { "Content-Type": "application/json" },
   });
   return response?.data;
+};
+
+export const uploadFileApi = async (file: any) => {
+  const response = await API.post("/documents", file, {
+    headers: { "Content-Type": "multipart/formdata" },
+  });
+
+  return response.data;
 };
 
 export const getChats = async (page: number) => {

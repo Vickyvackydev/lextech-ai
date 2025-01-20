@@ -82,3 +82,7 @@ export { default as CAPTION } from "../assets/images/caption.png";
 export { default as HOMEPAGE } from "../assets/images/homepage.png";
 export { default as WOMAN } from "../assets/images/woman.jpeg";
 export { default as ARROW_POINTER } from "../assets/images/arrow.jpg";
+export { default as ARROW_WHITE } from "../assets/icons/white-arr.svg";
+export { default as ARROW_GREY } from "../assets/icons/gray-arr.svg";
+export { default as ARROW_RIGHT_UP } from "../assets/icons/arrow-right-up.svg";
+export { default as USER_IVON } from "../assets/icons/user.svg";

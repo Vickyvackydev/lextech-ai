@@ -6,6 +6,11 @@ module.exports = {
       backgroundImage: {
         court: "url('./assets/background.svg')",
       },
+      boxShadow: {
+        custom:
+          "0px 0.5px 0px 0px #FFFFFF80 inset, 0px -2px 40px 0px #BB9BFF26, 0px -2px 10px 0px #E9DFFF4D",
+      },
+
       colors: {
         primary: {
           100: "#002A7F",

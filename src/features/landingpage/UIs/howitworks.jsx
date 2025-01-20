@@ -42,6 +42,12 @@ function HowItWorks() {
             640: { slidesPerView: 3 }, // For tablets
             320: { slidesPerView: 1 }, // For mobile
           }}
+          //   navigation= {
+          //     {
+          //         nextEl: ".custom-next-button",
+          //         prevEl: ".custom-prev-button"
+          //     }
+          //   }
         >
           {swiperData.map((item, index) => (
             <SwiperSlide key={index}>

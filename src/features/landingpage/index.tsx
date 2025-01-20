@@ -5,6 +5,9 @@ import ButtonV2 from "../../shared/components/buttonV2";
 import { ALL_LOGO, UI } from "../../utils-func/image_exports";
 import Features from "./UIs/features";
 import HowItWorks from "./UIs/howitworks";
+import Testimonials from "./UIs/testimonials";
+import Faqs from "./UIs/faqs";
+import WorkFlows from "./UIs/workflows";
 
 function LandingPage() {
   return (
@@ -52,6 +55,9 @@ function LandingPage() {
       <div>
         <Features />
         <HowItWorks />
+        <Testimonials />
+        <Faqs />
+        <WorkFlows />
       </div>
       <Footer />
     </>
